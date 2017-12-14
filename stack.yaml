@@ -1,0 +1,25 @@
+resolver: lts-7.24
+packages:
+- .
+- location:
+    git: https://github.com/domenkozar/elm-package.git
+    commit: 2a5d2de0b55d4c9a30bec71f1cc6ff80130d7dfe
+  extra-dep: true
+- location:
+    git: https://github.com/elm-lang/elm-compiler.git
+    commit: 7ee7742a16188df7ff498ec4ef9f8b49e58a35fe
+  extra-dep: true
+
+extra-deps:
+  - http-types-0.8.6
+  - aeson-pretty-0.7.2
+  - containers-0.5.10.2
+  - binary-0.7.6.1
+  - optparse-applicative-0.13.2.0
+
+flags: {}
+
+nix:
+  enable: true
+  pure: false
+  packages: [zlib,haskellPackages.happy]
