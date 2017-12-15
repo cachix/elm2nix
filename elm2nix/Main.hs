@@ -6,7 +6,7 @@ import qualified Control.Monad (join)
 import Data.Version (showVersion)
 import Data.String.Here
 import Options.Applicative
-import qualified Lib as Lib
+import qualified Lib
 import qualified Paths_elm2nix as This
 import qualified Text.PrettyPrint.ANSI.Leijen as PP
 
@@ -22,7 +22,7 @@ getOpts = customExecParser p (infoH opts rest)
   where
     rest = fullDesc
       <> progDesc "Convert Elm project to Nix expressions"
-      <> header ("elm2nix " ++ (showVersion This.version))
+      <> header ("elm2nix " ++ showVersion This.version)
       <> footerDoc (Just $ PP.string exampleText)
     p = prefs showHelpOnEmpty
 

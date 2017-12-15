@@ -17,44 +17,44 @@ data DerivationSource = DerivationSource
   } deriving (Show, Eq)
 
 instance Show Package.Version where
-  show ver = Package.versionToString ver
+  show = Package.versionToString
 
 -- | Use nix-prefetch-url to obtain resulting path and it's hash
 -- | Partially taken from cabal2nix/src/Distribution/Nixpkgs/Fetch.hs
 prefetchURL :: (Package.Name, Package.Version) -> IO DerivationSource
 prefetchURL (name, version) =
-  let
-    url = toZipballUrl name version
-    args :: [String]
-    args = ["--unpack", "--print-path", url]
-  in do
-  envs <- getEnvironment
-  (Nothing, Just stdoutH, _, processH) <- createProcess (proc "nix-prefetch-url" args)
-    { env = Nothing
-    , std_in = Inherit
-    , std_err = Inherit
-    , std_out = CreatePipe
-    }
+  let url = toZipballUrl name version
+      args :: [String]
+      args = ["--unpack", "--print-path", url]
+  in  do
+        envs <- getEnvironment
+        (Nothing, Just stdoutH, _, processH) <-
+          createProcess (proc "nix-prefetch-url" args) { env     = Nothing
+                                                       , std_in  = Inherit
+                                                       , std_err = Inherit
+                                                       , std_out = CreatePipe
+                                                       }
 
-  exitCode <- waitForProcess processH
-  case exitCode of
-    ExitFailure _ -> error "nix-prefetch-url exited with non-zero"
-    ExitSuccess   -> do
-      buf <- BS.hGetContents stdoutH
-      let ls = BS.lines buf
-      case length ls of
-        0 -> error "unknown nix-prefetch-url output"
-        2 -> return $
-           DerivationSource
-             (BS.unpack $ head ls)
-             (BS.unpack $ head $ tail ls)
-             url
-             name
-             version
-        _ -> error "unknown nix-prefetch-url output"
+        exitCode <- waitForProcess processH
+        case exitCode of
+          ExitFailure _ -> error "nix-prefetch-url exited with non-zero"
+          ExitSuccess   -> do
+            buf <- BS.hGetContents stdoutH
+            let ls = BS.lines buf
+            case length ls of
+              0 -> error "unknown nix-prefetch-url output"
+              2 -> return $ DerivationSource (BS.unpack $ head ls)
+                                             (BS.unpack $ head $ tail ls)
+                                             url
+                                             name
+                                             version
+              _ -> error "unknown nix-prefetch-url output"
 
 
 toZipballUrl :: Package.Name -> Package.Version -> String
 toZipballUrl name version =
-  "https://github.com/" ++ Package.toUrl name
-  ++ "/archive/" ++ Package.versionToString version ++ ".zip"
+  "https://github.com/"
+    ++ Package.toUrl name
+    ++ "/archive/"
+    ++ Package.versionToString version
+    ++ ".zip"
