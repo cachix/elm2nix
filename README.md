@@ -1,5 +1,7 @@
 # elm2nix (alpha/unstable)
 
+[![Build Status](https://travis-ci.org/domenkozar/elm2nix.svg?branch=master)](https://travis-ci.org/domenkozar/elm2nix)
+
 Convert Elm project into Nix expressions.
 
 ## Installation
