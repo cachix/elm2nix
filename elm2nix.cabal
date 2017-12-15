@@ -38,6 +38,7 @@ library
     , bytestring
     , containers
     , here
+    , text
   exposed-modules:
       Lib
       Prefetch
