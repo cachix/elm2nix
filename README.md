@@ -15,6 +15,10 @@ Convert Elm project into Nix expressions.
     $ ~/.local/bin/elm2nix convert > elm-srcs.nix
     $ nix-build
 
+## Running tests (as per travis)
+
+    $ ./scripts/tests.sh
+
 ## FAQ
 
 ### Why are there no Nix expressions yet to install elm2nix?

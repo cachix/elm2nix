@@ -8,6 +8,7 @@ module Lib
 import Control.Monad (mapM)
 import Control.Monad.Except (liftIO, throwError)
 import Data.List (intercalate)
+import qualified Data.Text as Text
 import System.Directory (createDirectoryIfMissing, doesFileExist)
 import System.Exit (exitFailure)
 import System.IO ( hPutStrLn, stdout, stderr)
@@ -50,9 +51,8 @@ runCLI f = do
 generateDefault :: Manager.Manager ()
 generateDefault = do
   desc <- readDescription
-  let defaultNix = [template|data/default.nix|]
-      name = Package.toUrl (Desc.name desc) ++ "-" ++ show (Desc.version desc)
-  liftIO $ putStrLn defaultNix
+  let name = toNixName (Desc.name desc) ++ "-" ++ show (Desc.version desc)
+  liftIO $ putStrLn [template|data/default.nix|]
 
 solveDependencies :: Manager.Manager ()
 solveDependencies = do
@@ -98,3 +98,8 @@ generateNixSources dss =
     ${intercalate "\n" (map generateNixSource dss)}
 }
   |]
+
+-- | Converts Package.Name to Nix friendly name
+toNixName :: Package.Name -> String
+toNixName (Package.Name user project) =
+  Text.unpack user ++ "-" ++ Text.unpack project
