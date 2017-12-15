@@ -22,4 +22,6 @@ flags: {}
 nix:
   enable: true
   pure: false
-  packages: [zlib,haskellPackages.happy]
+  shell-file: shell.nix
+
+skip-ghc-check: true
