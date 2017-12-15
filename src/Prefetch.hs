@@ -1,5 +1,3 @@
--- Partially taken from cabal2nix/src/Distribution/Nixpkgs/Fetch.hs
-
 module Prefetch where
 
 import System.Environment
@@ -22,6 +20,7 @@ instance Show Package.Version where
   show ver = Package.versionToString ver
 
 -- | Use nix-prefetch-url to obtain resulting path and it's hash
+-- | Partially taken from cabal2nix/src/Distribution/Nixpkgs/Fetch.hs
 prefetchURL :: (Package.Name, Package.Version) -> IO DerivationSource
 prefetchURL (name, version) =
   let

@@ -1,5 +1,5 @@
 {-# LANGUAGE QuasiQuotes #-}
-module Main where
+module Main (main) where
 
 import Data.Semigroup ((<>))
 import qualified Control.Monad (join)

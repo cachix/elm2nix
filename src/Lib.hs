@@ -15,7 +15,6 @@ import qualified Data.Map as Map
 import Data.String.Here
 
 import qualified Install.Solver as Solver
-import qualified Reporting.Error as Error
 import qualified Install.Plan as Plan
 import qualified Reporting.Error as Error
 import qualified Manager
@@ -53,36 +52,31 @@ generateDefault = do
   desc <- readDescription
   let defaultNix = [template|data/default.nix|]
       name = Package.toUrl (Desc.name desc) ++ "-" ++ show (Desc.version desc)
-  liftIO $ hPutStrLn stdout defaultNix
+  liftIO $ putStrLn defaultNix
 
 solveDependencies :: Manager.Manager ()
 solveDependencies = do
-  liftIO $ hPutStrLn stderr $ "Resolving elm-package.json dependencies into elm-stuff/exact-dependencies.json ..."
+  liftIO $ hPutStrLn stderr "Resolving elm-package.json dependencies into elm-stuff/exact-dependencies.json ..."
 
   desc <- readDescription
   newSolution <- Solver.solve (Desc.elmVersion desc) (Desc.dependencies desc)
   liftIO (createDirectoryIfMissing True Path.stuffDirectory)
   liftIO (Solution.write Path.solvedDependencies newSolution)
 
-  liftIO $ hPutStrLn stderr $ "Prefetching tarballs and computing sha256 hashes ..."
+  liftIO $ hPutStrLn stderr "Prefetching tarballs and computing sha256 hashes ..."
 
   let solL = Map.toList newSolution
   sources <- liftIO $ mapM Prefetch.prefetchURL solL
 
-  liftIO $ hPutStrLn stdout $ generateNixSources sources
+  liftIO $ putStrLn $ generateNixSources sources
 
 readDescription :: Manager.Manager Desc.Description
 readDescription = do
   exists <- liftIO (doesFileExist Path.description)
 
-  desc <-
-    if exists
-    then
-      Desc.read Error.CorruptDescription Path.description
-    else
-      Install.initialDescription
-  return desc
-
+  if exists
+  then Desc.read Error.CorruptDescription Path.description
+  else Install.initialDescription
 
 generateNixSource :: DerivationSource -> String
 generateNixSource ds =
