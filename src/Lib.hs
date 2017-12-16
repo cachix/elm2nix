@@ -81,12 +81,12 @@ readDescription = do
 generateNixSource :: DerivationSource -> String
 generateNixSource ds =
   -- TODO: pass name to fetchzip
-  [i|  "${Package.toUrl (drvName ds)}" = fetchzip {
-    url = "${drvUrl ds}";
-    sha256 = "${drvHash ds}";
-    meta = {
-      version = "${drvVersion ds}";
+  [i|  "${Package.toUrl (drvName ds)}" = {
+    src = fetchzip {
+      url = "${drvUrl ds}";
+      sha256 = "${drvHash ds}";
     };
+    version = "${drvVersion ds}";
   };|]
 
 generateNixSources :: [DerivationSource] -> String
