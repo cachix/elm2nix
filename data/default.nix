@@ -35,8 +35,8 @@ let
       '';
 
       buildPhase = ''
-        mkdir -p \$out/share/doc
-        elm make --warn --output \$out/\$name.js --docs \$out/share/doc/\$name.json
+        mkdir -p $out/share/doc
+        elm make --warn --output $out/$name.js --docs $out/share/doc/$name.json
       '';
 
       installPhase = ":";

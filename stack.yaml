@@ -1,4 +1,5 @@
 resolver: lts-7.24
+# Sadly, Elm 0.18 doesn't support GHC 8
 packages:
 - .
 - location:
@@ -9,6 +10,12 @@ packages:
     git: https://github.com/elm-lang/elm-compiler.git
     commit: 7ee7742a16188df7ff498ec4ef9f8b49e58a35fe
   extra-dep: true
+# needed due to https://github.com/tmhedberg/here/commit/8a616b358bcc16bd215a78a8f6192ad9df8224b6
+- location:
+    git: https://github.com/tmhedberg/here.git
+    commit: 8a616b358bcc16bd215a78a8f6192ad9df8224b6
+  extra-dep: true
+
 
 extra-deps:
   - http-types-0.8.6
