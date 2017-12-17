@@ -6,7 +6,7 @@ Convert [Elm](http://elm-lang.org/) project into [Nix](https://nixos.org/nix/) e
 
 ## Installation
 
-    $ stack install --nix
+    $ nix-shell -p stack --run "stack install --nix"
 
 ## Usage
 
