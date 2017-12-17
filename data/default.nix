@@ -28,7 +28,7 @@ let
 
         \${lib.concatStrings (lib.mapAttrsToList (name: src: ''
           mkdir -p elm-stuff/packages/\${name}
-          ln -s \${src} elm-stuff/packages/\${name}/\${src.meta.version}
+          ln -s \${src.src} elm-stuff/packages/\${name}/\${src.version}
         '') sources)}
 
         runHook postSetupElmStuffPhase
