@@ -80,22 +80,20 @@ readDescription = do
 
 generateNixSource :: DerivationSource -> String
 generateNixSource ds =
-   -- TODO: pass name to fetchzip
-   [iTrim|
-   "${Package.toUrl (drvName ds)}" = fetchzip {
-     url = "${drvUrl ds}";
-     sha256 = "${drvHash ds}";
-     meta = {
-       version = "${drvVersion ds}";
-     };
-   };
-   |]
+  -- TODO: pass name to fetchzip
+  [i|  "${Package.toUrl (drvName ds)}" = fetchzip {
+    url = "${drvUrl ds}";
+    sha256 = "${drvHash ds}";
+    meta = {
+      version = "${drvVersion ds}";
+    };
+  };|]
 
 generateNixSources :: [DerivationSource] -> String
 generateNixSources dss =
   [iTrim|
-  { fetchzip  }: {
-    ${intercalate "\n" (map generateNixSource dss)}
+{ fetchzip }: {
+${intercalate "\n" (map generateNixSource dss)}
 }
   |]
 
