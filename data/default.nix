@@ -8,6 +8,8 @@ let
     { srcs ? ./elm-srcs.nix
     , src
     , name
+    , srcdir ? "./src"
+    , targets ? []
     }:
     let
       sources = import srcs { inherit fetchzip; };
@@ -35,9 +37,13 @@ let
         runHook postSetupElmStuffPhase
       '';
 
-      buildPhase = ''
-        mkdir -p $out/share/doc
-        elm make --warn --output $out/$name.js --docs $out/share/doc/$name.json
+      buildPhase = let
+        elmfile = module: "\${srcdir}/\${builtins.replaceStrings ["."] ["/"] module}.elm";
+      in ''
+        mkdir -p \$out/share/doc
+        \${lib.concatStrings (map (module: ''
+          elm make --warn \${elmfile module} --output \$out/\${module}.js --docs \$out/share/doc/\${module}.json
+        '') targets)}
       '';
 
       installPhase = ":";
@@ -46,4 +52,6 @@ in mkDerivation {
   name = "${name}";
   srcs = ./elm-srcs.nix;
   src = ./.;
+  srcdir = "${srcdir}";
+  targets = [];
 }
