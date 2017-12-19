@@ -6,13 +6,14 @@ with (import nixpkgs config);
 let
   mkDerivation =
     { srcs ? ./elm-srcs.nix
-    , exactDependencies ? ./elm-stuff/exact-dependencies.json
     , src
     , name
     }:
     let
       sources = import srcs { inherit fetchzip; };
-    in  stdenv.mkDerivation {
+      exactDependencies = builtins.toFile "exact-dependencies.json"
+        (builtins.toJSON (lib.mapAttrs (name: value: value.version) sources));
+    in stdenv.mkDerivation {
       inherit name src;
 
       buildInputs = [ elmPackages.elm ];
