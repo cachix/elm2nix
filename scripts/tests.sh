@@ -3,7 +3,7 @@
 
 set -e
 
-stack install --nix
+NIX_PATH=nixpkgs=https://github.com/NixOS/nixpkgs/archive/17.09.tar.gz stack install --nix
 
 MYTMPDIR=$(mktemp -d)
 trap "rm -rf $MYTMPDIR" EXIT
