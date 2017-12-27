@@ -1,5 +1,5 @@
 #!/usr/bin/env nix-shell
-#!nix-shell -p git stack -i bash
+#!nix-shell -I nixpkgs=https://github.com/NixOS/nixpkgs/archive/17.09.tar.gz -p git stack -i bash
 
 set -e
 
