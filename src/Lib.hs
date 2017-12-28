@@ -52,6 +52,9 @@ generateDefault :: Manager.Manager ()
 generateDefault = do
   desc <- readDescription
   let name = toNixName (Desc.name desc) ++ "-" ++ show (Desc.version desc)
+  let srcdir = case Desc.sourceDirs desc of
+                    []    -> "."
+                    (a:_) -> a
   liftIO $ putStrLn [template|data/default.nix|]
 
 solveDependencies :: Manager.Manager ()
