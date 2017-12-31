@@ -5,7 +5,7 @@ module Lib
     , init'
     ) where
 
-import Control.Monad (mapM)
+import Control.Concurrent.Async
 import Control.Monad.Except (liftIO, throwError)
 import Data.List (intercalate)
 import qualified Data.Text as Text
@@ -59,7 +59,7 @@ generateDefault = do
 
 solveDependencies :: Manager.Manager ()
 solveDependencies = do
-  liftIO $ hPutStrLn stderr "Resolving elm-package.json dependencies into elm-stuff/exact-dependencies.json ..."
+  liftIO $ hPutStrLn stderr "Resolving elm-package.json dependencies into Nix ..."
 
   desc <- readDescription
   newSolution <- Solver.solve (Desc.elmVersion desc) (Desc.dependencies desc)
@@ -69,7 +69,7 @@ solveDependencies = do
   liftIO $ hPutStrLn stderr "Prefetching tarballs and computing sha256 hashes ..."
 
   let solL = Map.toList newSolution
-  sources <- liftIO $ mapM Prefetch.prefetchURL solL
+  sources <- liftIO $ mapConcurrently Prefetch.prefetchURL solL
 
   liftIO $ putStrLn $ generateNixSources sources
 

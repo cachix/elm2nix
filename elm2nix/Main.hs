@@ -6,12 +6,15 @@ import qualified Control.Monad (join)
 import Data.Version (showVersion)
 import Data.String.Here
 import Options.Applicative
+import System.IO
 import qualified Lib
 import qualified Paths_elm2nix as This
 import qualified Text.PrettyPrint.ANSI.Leijen as PP
 
 main :: IO ()
 main = do
+  hSetBuffering stdout LineBuffering
+  hSetBuffering stderr LineBuffering
   cmd <- getOpts
   case cmd of
     Convert -> Lib.convert
