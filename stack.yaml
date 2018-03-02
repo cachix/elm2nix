@@ -7,7 +7,7 @@ packages:
     commit: 2a5d2de0b55d4c9a30bec71f1cc6ff80130d7dfe
   extra-dep: true
 - location:
-    git: https://github.com/elm-lang/elm-compiler.git
+    git: https://github.com/jerith666/elm-compiler.git
     commit: 7ee7742a16188df7ff498ec4ef9f8b49e58a35fe
   extra-dep: true
 # needed due to https://github.com/tmhedberg/here/commit/8a616b358bcc16bd215a78a8f6192ad9df8224b6
