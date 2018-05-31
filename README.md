@@ -6,8 +6,14 @@ Convert Elm project into Nix expressions.
 
 ## Installation
 
+### With Stack
+
     $ stack install --nix
 
+### With Nix
+
+    $ nix-env -f . -i
+    
 ## Usage
 
     $ cd my-project
@@ -20,10 +26,6 @@ Convert Elm project into Nix expressions.
     $ ./scripts/tests.sh
 
 ## FAQ
-
-### Why are there no Nix expressions yet to install elm2nix?
-
-Waiting on https://github.com/input-output-hk/stack2nix 0.2 release
 
 ### Why is mkDerivation inlined into `default.nix`?
 As it's considered unstable, it's generated for now. Might change in the future.
