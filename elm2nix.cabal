@@ -30,16 +30,17 @@ library
       src
   build-depends:
       base >= 4.7 && < 5
+    , aeson
     , async
-    , elm-package
-    , elm-compiler
-    , directory
-    , mtl
-    , process
     , bytestring
     , containers
+    , directory
     , here
+    , mtl
+    , process
     , text
+    , transformers
+    , unordered-containers
   exposed-modules:
       Lib
       Prefetch
