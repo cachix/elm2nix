@@ -42,7 +42,7 @@ let
       in ''
         mkdir -p \$out/share/doc
         \${lib.concatStrings (map (module: ''
-          elm make --warn \${elmfile module} --output \$out/\${module}.js --docs \$out/share/doc/\${module}.json
+          elm make \${elmfile module} --output \$out/\${module}.js --docs \$out/share/doc/\${module}.json
         '') targets)}
       '';
 
