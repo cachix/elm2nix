@@ -131,19 +131,16 @@ solveDependencies = do
 
 generateNixSource :: DerivationSource -> String
 generateNixSource ds =
-  -- TODO: pass name to fetchzip
-  [i|  "${drvName ds}" = {
-    src = fetchzip {
-      url = "${drvUrl ds}";
-      sha256 = "${drvHash ds}";
-    };
+  [i| 
+  "${drvName ds}" = {
+    sha256 = "${drvHash ds}";
     version = "${drvVersion ds}";
   };|]
 
 generateNixSources :: [DerivationSource] -> String
 generateNixSources dss =
   [iTrim|
-{ fetchzip }: {
+{
 ${intercalate "\n" (map generateNixSource dss)}
 }
   |]

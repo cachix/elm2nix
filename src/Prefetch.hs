@@ -20,7 +20,7 @@ prefetchURL :: String -> String -> IO DerivationSource
 prefetchURL name version =
   let url = toZipballUrl name version
       args :: [String]
-      args = ["--unpack", "--print-path", url]
+      args = ["--print-path", url]
   in  do
         (Nothing, Just stdoutH, _, processH) <-
           createProcess (proc "nix-prefetch-url" args) { env     = Nothing
@@ -51,4 +51,4 @@ toZipballUrl name version =
     ++ name
     ++ "/archive/"
     ++ version
-    ++ ".zip"
+    ++ ".tar.gz"
