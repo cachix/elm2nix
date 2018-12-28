@@ -1,34 +1,5 @@
-resolver: lts-7.24
-# Sadly, Elm 0.18 doesn't support GHC 8
+resolver: lts-13.0
 packages:
 - .
-- location:
-    git: https://github.com/domenkozar/elm-package.git
-    commit: 2a5d2de0b55d4c9a30bec71f1cc6ff80130d7dfe
-  extra-dep: true
-- location:
-    git: https://github.com/jerith666/elm-compiler.git
-    commit: 7ee7742a16188df7ff498ec4ef9f8b49e58a35fe
-  extra-dep: true
-# needed due to https://github.com/tmhedberg/here/commit/8a616b358bcc16bd215a78a8f6192ad9df8224b6
-- location:
-    git: https://github.com/tmhedberg/here.git
-    commit: 8a616b358bcc16bd215a78a8f6192ad9df8224b6
-  extra-dep: true
-
-
-extra-deps:
-  - http-types-0.8.6
-  - aeson-pretty-0.7.2
-  - containers-0.5.10.2
-  - binary-0.7.6.1
-  - optparse-applicative-0.13.2.0
-
-flags: {}
-
 nix:
-  enable: true
-  pure: false
-  shell-file: shell.nix
-
-skip-ghc-check: true
+  packages: [zlib]
