@@ -1,29 +1,90 @@
-# elm2nix (alpha/unstable)
+# elm2nix
 
-[![Build Status](https://travis-ci.org/domenkozar/elm2nix.svg?branch=master)](https://travis-ci.org/domenkozar/elm2nix)
+[![Build Status](https://travis-ci.com/domenkozar/elm2nix.svg?branch=master)](https://travis-ci.com/domenkozar/elm2nix)
+[![Hackage](https://img.shields.io/hackage/v/elm2nix.svg)](https://hackage.haskell.org/package/elm2nix)
 
-Convert Elm project into Nix expressions.
+Convert an [Elm](http://elm-lang.org/) project into
+[Nix](https://nixos.org/nix/) expressions.
+
+It consists of multiple commands:
+- `elm2nix convert`: Given `elm.json` in current directory, all dependencies are
+  parsed and their sha256sum calculated
+- `elm2nix snapshot`: Downloads snapshot of http://package.elm-lang.org into `versions.dat`
+- `elm2nix init`: Generates `default.nix` that glues everything together
+
+## Assumptions
+
+Supports only Elm 0.19.x
 
 ## Installation
 
-    $ stack install --nix
+    $ nix-shell -p stack --run "stack install --nix"
 
 ## Usage
 
-    $ cd my-project
+    $ git clone https://github.com/evancz/elm-todomvc.git
+    $ cd elm-todomvc
     $ ~/.local/bin/elm2nix init > default.nix
     $ ~/.local/bin/elm2nix convert > elm-srcs.nix
+    $ ~/.local/bin/elm2nix snapshot > versions.dat
     $ nix-build
+    $ chromium ./result/index.html
 
-## Running tests (as per travis)
+## Running tests (as per CI)
 
     $ ./scripts/tests.sh
 
 ## FAQ
 
-### Why are there no Nix expressions yet to install elm2nix?
-
-Waiting on https://github.com/input-output-hk/stack2nix 0.2 release
-
 ### Why is mkDerivation inlined into `default.nix`?
-As it's considered unstable, it's generated for now. Might change in the future.
+
+As it's considered experimental, it's generated for now. Might change in the future.
+
+### How to use with ParcelJS and Yarn?
+
+Instead of running `elm2nix init`, use something like:
+
+```nix
+{ pkgs ? import <nixpkgs> {}
+}:
+
+let
+  yarnPkg = pkgs.yarn2nix.mkYarnPackage {
+    name = "myproject-node-packages";
+    packageJSON = ./package.json;
+    unpackPhase = ":";
+    src = null;
+    yarnLock = ./yarn.lock;
+    publishBinsFor = ["parcel-bundler"];
+  };
+in pkgs.stdenv.mkDerivation {
+  name = "myproject-frontend";
+  src = pkgs.lib.cleanSource ./.;
+
+  buildInputs = with pkgs.elmPackages; [
+    elm
+    elm-format
+    yarnPkg
+    pkgs.yarn
+  ];
+
+  patchPhase = ''
+    rm -rf elm-stuff
+    ln -sf ${yarnPkg}/node_modules .
+  '';
+
+  shellHook = ''
+    ln -fs ${yarnPkg}/node_modules .
+  '';
+
+  configurePhase = pkgs.elmPackages.fetchElmDeps {
+    elmPackages = import ./elm-srcs.nix;
+    versionsDat = ./versions.dat;
+  };
+
+  installPhase = ''
+    mkdir -p $out
+    parcel build -d $out index.html
+  '';
+}
+```
