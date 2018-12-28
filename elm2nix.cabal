@@ -3,7 +3,7 @@
 -- see: https://github.com/sol/hpack
 
 name:           elm2nix
-version:        0.1.0.0
+version:        0.1.0
 synopsis:       Turn your Elm project into buildable Nix project
 description:    Please see the README on Github at <https://github.com/domenkozar/elm2nix#readme>
 homepage:       https://github.com/domenkozar/elm2nix#readme
@@ -14,7 +14,7 @@ copyright:      2017-2019 Domen Kožar
 license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
-cabal-version:  >= 2.0
+cabal-version:  2.0
 
 extra-source-files:
     ChangeLog.md
@@ -51,6 +51,8 @@ library
       Elm2Nix.PackagesSnapshot
   other-modules:
       Paths_elm2nix
+  autogen-modules:
+      Paths_elm2nix
   default-language: Haskell2010
 
 executable elm2nix
@@ -58,6 +60,8 @@ executable elm2nix
   hs-source-dirs:
       elm2nix
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  autogen-modules:
+      Paths_elm2nix
   other-modules:
       Paths_elm2nix
   build-depends:

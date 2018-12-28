@@ -4,7 +4,7 @@ export NIX_PATH=nixpkgs=https://github.com/NixOS/nixpkgs/archive/release-18.09.t
 
 set -e
 
-stack install --nix --pedantic
+stack install --nix --pedantic --fast
 
 MYTMPDIR=$(mktemp -d)
 trap "rm -rf $MYTMPDIR" EXIT
