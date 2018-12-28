@@ -5,6 +5,7 @@
 module Elm2Nix
     ( convert
     , initialize
+    , snapshot
     ) where
 
 import Control.Concurrent.Async (mapConcurrently)
@@ -25,6 +26,7 @@ import qualified Data.Aeson as Json
 import qualified Data.Text as Text
 
 import Elm2Nix.FixedOutput (FixedDerivation(..), prefetch)
+import Elm2Nix.PackagesSnapshot (snapshot)
 
 
 newtype Elm2Nix a = Elm2Nix { runElm2Nix_ :: ExceptT Elm2NixError IO a }
@@ -101,7 +103,7 @@ initialize = runCLI $
     name :: String
     name = Text.unpack (toNixName baseName <> "-" <> version)
     srcdir :: String
-    srcdir = "."
+    srcdir = "./src" -- TODO: get from elm.json
 
 -- Utils
 

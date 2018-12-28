@@ -10,7 +10,8 @@ let
     , src
     , name
     , srcdir ? "./src"
-    , targets ? ["Main"]
+    , targets ? []
+    , versionsDat ? ./versions.dat
     }:
     stdenv.mkDerivation {
       inherit name src;
@@ -19,7 +20,7 @@ let
 
       buildPhase = pkgs.elmPackages.fetchElmDeps {
         elmPackages = import srcs;
-        versionsDat = ./versions.dat;
+        inherit versionsDat;
       };
 
       installPhase = let
@@ -27,9 +28,8 @@ let
       in ''
         mkdir -p \$out/share/doc
         \${lib.concatStrings (map (module: ''
-          elm make \${elmfile module} \
-            --output \$out/\${module}.html \
-            --docs \$out/share/doc/\${module}.json
+          echo "compiling \${elmfile module}"
+          elm make \${elmfile module} --output \$out/\${module}.html --docs \$out/share/doc/\${module}.json
         '') targets)}
       '';
     };
@@ -37,6 +37,6 @@ in mkDerivation {
   name = "${name}";
   srcs = ./elm-srcs.nix;
   src = ./.;
+  targets = ["Main"];
   srcdir = "${srcdir}";
-  targets = [];
 }
