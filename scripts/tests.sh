@@ -1,10 +1,9 @@
 #!/usr/bin/env nix-shell
-#!nix-shell -p git stack -i bash -I nixpkgs=https://github.com/NixOS/nixpkgs/archive/release-18.09.tar.gz
-export NIX_PATH=nixpkgs=https://github.com/NixOS/nixpkgs/archive/release-18.09.tar.gz
+#!nix-shell -p git -i bash
 
 set -e
 
-stack install --nix --pedantic --fast
+PATH="$(nix-build . --no-out-link)/bin:$PATH"
 
 MYTMPDIR=$(mktemp -d)
 trap "rm -rf $MYTMPDIR" EXIT
@@ -19,9 +18,9 @@ checkfile() {
 }
 
 pushd $MYTMPDIR/elm-todomvc
-  ~/.local/bin/elm2nix init > default.nix
-  ~/.local/bin/elm2nix convert > elm-srcs.nix
-  ~/.local/bin/elm2nix snapshot > versions.dat
+  elm2nix init > default.nix
+  elm2nix convert > elm-srcs.nix
+  elm2nix snapshot > versions.dat
   nix-build
   checkfile ./result/Main.html
 popd
