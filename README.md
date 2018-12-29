@@ -18,15 +18,17 @@ Supports Elm 0.19.x
 
 ## Installation
 
-    $ nix-shell -p stack --run "stack install --nix"
+    $ git clone https://github.com/domenkozar/elm2nix.git
+    $ cd elm2nix
+    $ nix-env -if .
 
 ## Usage
 
     $ git clone https://github.com/evancz/elm-todomvc.git
     $ cd elm-todomvc
-    $ ~/.local/bin/elm2nix init > default.nix
-    $ ~/.local/bin/elm2nix convert > elm-srcs.nix
-    $ ~/.local/bin/elm2nix snapshot > versions.dat
+    $ elm2nix init > default.nix
+    $ elm2nix convert > elm-srcs.nix
+    $ elm2nix snapshot > versions.dat
     $ nix-build
     $ chromium ./result/index.html
 
