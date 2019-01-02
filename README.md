@@ -18,6 +18,14 @@ Supports Elm 0.19.x
 
 ## Installation
 
+### From nixpkgs (recommended)
+
+Make sure you have up to date stable or unstable nixpkgs channel.
+
+   $ nix-env -iA elm2nix
+
+### From source
+
     $ git clone https://github.com/domenkozar/elm2nix.git
     $ cd elm2nix
     $ nix-env -if .
@@ -30,7 +38,7 @@ Supports Elm 0.19.x
     $ elm2nix convert > elm-srcs.nix
     $ elm2nix snapshot > versions.dat
     $ nix-build
-    $ chromium ./result/index.html
+    $ chromium ./result/Main.html
 
 ## Running tests (as per CI)
 
