@@ -17,6 +17,9 @@ checkfile() {
   fi
 }
 
+NIXPKGS_COMMIT=$(nix eval --raw "(builtins.fromJSON (builtins.readFile ./nixpkgs-src.json)).rev")
+export NIX_PATH=nixpkgs=https://github.com/NixOS/nixpkgs/archive/$NIXPKGS_COMMIT.tar.gz
+
 pushd $MYTMPDIR/elm-todomvc
   elm2nix init > default.nix
   elm2nix convert > elm-srcs.nix
