@@ -8,6 +8,7 @@
 
 -}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE CPP #-}
 module Elm2Nix.PackagesSnapshot
   ( snapshot
   ) where
@@ -17,7 +18,10 @@ import qualified Data.Aeson as Aeson
 import qualified Data.Binary as Binary
 import Data.Binary (Binary, put, get, putWord8, getWord8)
 import qualified Data.Map as Map
+#if MIN_VERSION_req(2,0,0)
+#else
 import Data.Default (def)
+#endif
 import Data.Map (Map)
 import Data.Text (Text)
 import qualified Data.Text as Text
@@ -92,9 +96,15 @@ instance Binary PackageRegistry where
   get = liftM2 PackageRegistry get get
   put (PackageRegistry a b) = put a >> put b
 
+#if MIN_VERSION_req(2,0,0)
+defHttpConfig = Req.defaultHttpConfig
+#else
+defHttpConfig = def
+#endif
+
 snapshot :: String -> IO ()
 snapshot dir = do
-  r <- Req.runReq def $
+  r <- Req.runReq defHttpConfig $
     Req.req
     Req.POST
     (Req.https "package.elm-lang.org" Req./: "all-packages")
