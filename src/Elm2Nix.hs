@@ -135,8 +135,8 @@ initialize = runCLI $ do
     toNixName = Text.replace "/" "-"
     name :: String
     name = Text.unpack (toNixName baseName <> "-" <> version)
-    sourceRoot :: String
-    sourceRoot = "./src" -- TODO: get from elm.json
+    srcDir :: String
+    srcDir = "./src" -- TODO: get from elm.json
     -- TODO: Improve
     stringifySrcs :: Vector String -> String
     stringifySrcs xs =

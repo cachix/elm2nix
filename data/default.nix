@@ -8,13 +8,15 @@ let
   mkDerivation =
     { elmSrcs ? ./elm-srcs.nix
     , srcs
-    , sourceRoot ? "./src"
+    , srcDir ? "./src"
+    , extension ? ".elm"
     , name
     , targets ? []
     , versionsDat ? ./versions.dat
     }:
     stdenv.mkDerivation {
-      inherit name srcs sourceRoot;
+      inherit name srcs;
+      sourceRoot = ".";
 
       buildInputs = [ elmPackages.elm ];
 
@@ -24,9 +26,24 @@ let
       };
 
       installPhase = let
-        elmfile = module: "\${builtins.replaceStrings ["."] ["/"] module}.elm";
+        elmfile = module: "\${srcDir}/\${builtins.replaceStrings ["."] ["/"] module}\${extension}";
+        elmJson = pkgs.lib.importJSON ./elm.json;
+        elmJsonFile = pkgs.writeText "elm.json" (builtins.toJSON generatedElmJson);
+        genSrcs = xs: map (path: if path == "." then srcDir else builtins.replaceStrings [".." "/"] ["" ""] path) xs;
+        generatedElmJson = with pkgs.lib;
+          if hasAttrByPath ["source-directories"] elmJson then
+            attrsets.mapAttrs
+              (name: value: if name == "source-directories" then genSrcs value else value)
+              elmJson
+          else
+            elmJson;
       in ''
         mkdir -p \$out/share/doc
+
+        cp \${elmJsonFile} ./elm.json
+        echo "Generating new elm.json..."
+        cat elm.json
+
         \${lib.concatStrings (map (module: ''
           echo "compiling \${elmfile module}"
           elm make \${elmfile module} --output \$out/\${module}.html --docs \$out/share/doc/\${module}.json
@@ -39,5 +56,5 @@ in mkDerivation {
   # TODO: add haskell paths
   srcs = ${srcs};
   targets = ["Main"];
-  sourceRoot = "${sourceRoot}";
+  srcDir = "${srcDir}";
 }
