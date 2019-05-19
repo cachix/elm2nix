@@ -8,7 +8,7 @@ let
   mkDerivation =
     { elmSrcs ? ./elm-srcs.nix
     , srcs
-    , srcDir ? "./src"
+    , srcdir ? "./src"
     , extension ? ".elm"
     , name
     , targets ? []
@@ -26,12 +26,12 @@ let
       };
 
       installPhase = let
-        elmfile = module: "\${srcDir}/\${builtins.replaceStrings ["."] ["/"] module}\${extension}";
+        elmfile = module: "\${srcdir}/\${builtins.replaceStrings ["."] ["/"] module}\${extension}";
         # TODO: review naming
         elmJson = pkgs.lib.importJSON ./elm.json;
         elmJsonFile = pkgs.writeText "elm.json" (builtins.toJSON generatedElmJson);
         # TODO: hacky.. there might be a better way
-        genSrcs = xs: map (path: if path == "." then srcDir else builtins.replaceStrings [".." "/"] ["" ""] path) xs;
+        genSrcs = xs: map (path: if path == "." then srcdir else builtins.replaceStrings [".." "/"] ["" ""] path) xs;
         generatedElmJson = with pkgs.lib;
           if hasAttrByPath ["source-directories"] elmJson then
             # TODO: check if there isn't better function
@@ -62,5 +62,5 @@ in mkDerivation {
   #   - consult with maitainer
   srcs = ${srcs};
   targets = ["Main"];
-  srcDir = "${srcDir}";
+  srcdir = "${srcdir}";
 }

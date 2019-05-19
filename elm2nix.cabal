@@ -46,6 +46,7 @@ library
     , transformers
     , unordered-containers
     , vector
+    , directory
   exposed-modules:
       Elm2Nix
       Elm2Nix.FixedOutput

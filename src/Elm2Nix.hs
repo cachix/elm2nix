@@ -21,10 +21,12 @@ import Data.Vector (Vector)
 import System.Exit (exitFailure)
 import System.IO (hPutStrLn, stderr)
 
+import qualified System.Directory
 import qualified Data.HashMap.Strict as HM
 import qualified Data.ByteString.Lazy as LBS
 import qualified Data.Aeson as Json
 import qualified Data.Text as Text
+import qualified Data.Vector as Vector
 
 import Elm2Nix.FixedOutput (FixedDerivation(..), prefetch)
 import Elm2Nix.PackagesSnapshot (snapshot)
@@ -123,6 +125,7 @@ initialize = runCLI $ do
   liftIO (hPutStrLn stderr $ "Using source directories:")
   liftIO (mapM (hPutStrLn stderr) srcs')
   let srcs = stringifySrcs srcs'
+  srcdir <- liftIO (getSrcDir srcs')
 
   liftIO (putStrLn [template|data/default.nix|])
   where
@@ -135,10 +138,25 @@ initialize = runCLI $ do
     toNixName = Text.replace "/" "-"
     name :: String
     name = Text.unpack (toNixName baseName <> "-" <> version)
-    srcDir :: String
-    srcDir = "./src" -- TODO: get from elm.json
+    getSrcDir :: Vector FilePath -> IO FilePath
+    getSrcDir dirs =
+      case Vector.toList dirs of
+        []       -> pure "./src" -- in theory redundant
+        [ dir ]  -> pure dir
+        xs@(h:t) ->
+          if "./." `elem` xs then do
+            -- Nix creates dir named after current directory
+            -- if `srcs` contains `./.`
+            path <- liftIO System.Directory.getCurrentDirectory
+            pure (lastDir path)
+          else
+            -- We can't really tell which one to choose
+            -- so we guess it's the first one
+            pure h
+    lastDir :: FilePath -> FilePath
+    lastDir = foldl (\path c -> if c == '/' then "" else path <> [c]) ""
     -- TODO: Improve
-    stringifySrcs :: Vector String -> String
+    stringifySrcs :: Vector FilePath -> String
     stringifySrcs xs =
       "[\n"
       <> foldr (\i acc -> "    " <> i <> "\n" <> acc) "" xs
