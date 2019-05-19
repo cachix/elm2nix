@@ -6,25 +6,25 @@ with (import nixpkgs config);
 
 let
   mkDerivation =
-    { srcs ? ./elm-srcs.nix
-    , src
+    { elmSrcs ? ./elm-srcs.nix
+    , srcs
+    , sourceRoot ? "./src"
     , name
-    , srcdir ? "./src"
     , targets ? []
     , versionsDat ? ./versions.dat
     }:
     stdenv.mkDerivation {
-      inherit name src;
+      inherit name srcs sourceRoot;
 
       buildInputs = [ elmPackages.elm ];
 
       buildPhase = pkgs.elmPackages.fetchElmDeps {
-        elmPackages = import srcs;
+        elmPackages = import elmSrcs;
         inherit versionsDat;
       };
 
       installPhase = let
-        elmfile = module: "\${srcdir}/\${builtins.replaceStrings ["."] ["/"] module}.elm";
+        elmfile = module: "\${builtins.replaceStrings ["."] ["/"] module}.elm";
       in ''
         mkdir -p \$out/share/doc
         \${lib.concatStrings (map (module: ''
@@ -35,8 +35,9 @@ let
     };
 in mkDerivation {
   name = "${name}";
-  srcs = ./elm-srcs.nix;
-  src = ./.;
+  elmSrcs = ./elm-srcs.nix;
+  # TODO: add haskell paths
+  srcs = ${srcs};
   targets = ["Main"];
-  srcdir = "${srcdir}";
+  sourceRoot = "${sourceRoot}";
 }

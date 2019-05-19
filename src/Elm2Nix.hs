@@ -17,6 +17,7 @@ import Data.List (intercalate)
 import Data.HashMap.Strict (HashMap)
 import Data.String.Here
 import Data.Text (Text)
+import Data.Vector (Vector)
 import System.Exit (exitFailure)
 import System.IO (hPutStrLn, stderr)
 
@@ -67,13 +68,36 @@ parseElmJsonDeps obj =
     parseDeps (Object hm) = mapM (uncurry parseDep) (HM.toList hm)
     parseDeps v           = Left (UnexpectedValue v)
 
+-- TODO: there is likely to be even better abstraction
+tryLookup :: HashMap Text Value -> Text -> Either Elm2NixError Value
+tryLookup hm key = maybeToRight (KeyNotFound key) (HM.lookup key hm)
+  where
     maybeToRight :: b -> Maybe a -> Either b a
     maybeToRight _ (Just x) = Right x
     maybeToRight y Nothing  = Left y
 
-    tryLookup :: HashMap Text Value -> Text -> Either Elm2NixError Value
-    tryLookup hm key =
-      maybeToRight (KeyNotFound key) (HM.lookup key hm)
+parseElmJsonSrcs :: Value -> Either Elm2NixError (Vector FilePath)
+parseElmJsonSrcs obj =
+  case obj of
+    Object hm -> do
+      case tryLookup hm "source-directories" of
+        -- the `source-directories` part of elm.json is optional
+        -- if user don't specified this value `src` directory is the default
+        Left _ -> Right $ pure "./src"
+        Right srcs ->
+          case srcs of
+            Array vec -> mapM extractSrcPath vec
+            v -> Left $ UnexpectedValue v
+    v -> Left $ UnexpectedValue v
+  where
+    extractSrcPath :: Value -> Either Elm2NixError String
+    extractSrcPath val =
+      case val of
+        String text -> Right $ toNixPath text
+        v -> Left $ UnexpectedValue v
+
+    toNixPath :: Text -> String
+    toNixPath = (\p -> if p == "." then "./." else p ) . Text.unpack
 
 -- CMDs
 
@@ -90,7 +114,16 @@ convert = runCLI $ do
   liftIO (putStrLn (generateNixSources sources))
 
 initialize :: IO ()
-initialize = runCLI $
+initialize = runCLI $ do
+  liftIO (hPutStrLn stderr "Resolving elm.json source directories into Nix paths...")
+  res <- liftIO (fmap Json.eitherDecode (LBS.readFile "elm.json"))
+  elmJson <- either (throwErr . ElmJsonReadError) return res
+
+  srcs' <- either throwErr return (parseElmJsonSrcs elmJson)
+  liftIO (hPutStrLn stderr $ "Using source directories:")
+  liftIO (mapM (hPutStrLn stderr) srcs')
+  let srcs = stringifySrcs srcs'
+
   liftIO (putStrLn [template|data/default.nix|])
   where
     -- | Converts Package.Name to Nix friendly name
@@ -102,8 +135,14 @@ initialize = runCLI $
     toNixName = Text.replace "/" "-"
     name :: String
     name = Text.unpack (toNixName baseName <> "-" <> version)
-    srcdir :: String
-    srcdir = "./src" -- TODO: get from elm.json
+    sourceRoot :: String
+    sourceRoot = "./src" -- TODO: get from elm.json
+    -- TODO: Improve
+    stringifySrcs :: Vector String -> String
+    stringifySrcs xs =
+      "[\n"
+      <> foldr (\i acc -> "    " <> i <> "\n" <> acc) "" xs
+      <> "  ]"
 
 -- Utils
 
