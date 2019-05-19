@@ -55,6 +55,10 @@ let
 in mkDerivation {
   name = "${name}";
   elmSrcs = ./elm-srcs.nix;
+  # TODO: given we need to process elm.json via nix anyway
+  # it might be better to just read this from elm.json?
+  #   - check if we're possible to get to elm.json
+  #   - consult with maitainer
   srcs = ${srcs};
   targets = ["Main"];
   srcDir = "${srcDir}";
