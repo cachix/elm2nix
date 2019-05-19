@@ -95,11 +95,15 @@ parseElmJsonSrcs obj =
     extractSrcPath :: Value -> Either Elm2NixError String
     extractSrcPath val =
       case val of
-        String text -> Right $ toNixPath text
+        String text -> Right (toNixPath (Text.unpack text))
         v -> Left $ UnexpectedValue v
 
-    toNixPath :: Text -> String
-    toNixPath = (\p -> if p == "." then "./." else p ) . Text.unpack
+    toNixPath :: FilePath -> FilePath
+    toNixPath path =
+      case path of
+        "."       -> "./."
+        p@('.':_) -> p
+        p         -> "./" <> p
 
 -- CMDs
 
