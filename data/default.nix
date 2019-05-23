@@ -31,8 +31,7 @@ let
           let elmjson = importJSON ./elm.json;
           in writeText "elm.json" (builtins.toJSON
             (if hasAttrByPath ["source-directories"] elmjson then
-              # TODO: check if there isn't better function
-              attrsets.mapAttrs (name: value: if name == "source-directories" then map sanitizePath value else value) elmjson
+              elmjson // { source-directories = (map sanitizePath elmjson.source-directories); }
             else
               elmjson
           ));
@@ -48,9 +47,9 @@ let
         \${lib.concatStrings (map (module:
           let fullmodule = sanitizePath module;
           in ''
-          echo "compiling \${module}"
-          elm make \${fullmodule}.elm --output $out/\${fullmodule}.html --docs $out/share/doc/\${fullmodule}.json
-        '') targets)}
+            echo "compiling \${module}"
+            elm make \${fullmodule}.elm --output $out/\${fullmodule}.html --docs $out/share/doc/\${fullmodule}.json
+          '') targets)}
       '';
     };
 in mkDerivation {
