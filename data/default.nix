@@ -25,13 +25,12 @@ let
         inherit versionsDat;
       };
 
-      installPhase = let
-        elmfile = module: "\${srcdir}/\${builtins.replaceStrings ["."] ["/"] module}\${extension}";
+      patchPhase = let
         # TODO: review naming
         elmJson = pkgs.lib.importJSON ./elm.json;
         elmJsonFile = pkgs.writeText "elm.json" (builtins.toJSON generatedElmJson);
         # TODO: hacky.. there might be a better way
-        genSrcs = xs: map (path: if path == "." then srcdir else builtins.replaceStrings [".." "/"] ["" ""] path) xs;
+        genSrcs = xs: map (path: if path == "." then srcdir else builtins.replaceStrings ["../" ".." "./" "."] ["" "" "" ""] path) xs;
         generatedElmJson = with pkgs.lib;
           if hasAttrByPath ["source-directories"] elmJson then
             # TODO: check if there isn't better function
@@ -41,11 +40,15 @@ let
           else
             elmJson;
       in ''
-        mkdir -p \$out/share/doc
-
         cp \${elmJsonFile} ./elm.json
         echo "Generating new elm.json..."
         cat elm.json
+      '';
+
+      installPhase = let
+        elmfile = module: "\${srcdir}/\${builtins.replaceStrings ["."] ["/"] module}\${extension}";
+      in ''
+        mkdir -p \$out/share/doc
 
         \${lib.concatStrings (map (module: ''
           echo "compiling \${elmfile module}"
