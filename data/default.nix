@@ -60,5 +60,5 @@ in mkDerivation {
   #   - check if we're possible to get to elm.json
   #   - consult with maitainer
   srcs = ${srcs};
-  targets = ["./src/Main"];
+  targets = ["./Main"];
 }
