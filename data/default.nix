@@ -46,9 +46,10 @@ let
 
         \${lib.concatStrings (map (module:
           let fullmodule = sanitizePath module;
+              modulename = sanitizePath (lib.removePrefix "./" module);
           in ''
             echo "compiling \${module}"
-            elm make \${fullmodule}.elm --output $out/\${fullmodule}.html --docs $out/share/doc/\${fullmodule}.json
+            elm make \${fullmodule}.elm --output $out/\${modulename}.html --docs $out/share/doc/\${modulename}.json
           '') targets)}
       '';
     };
