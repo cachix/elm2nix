@@ -1,20 +1,21 @@
 { nixpkgs ? <nixpkgs>
 , config ? {}
 }:
-
 with (import nixpkgs config);
-
 let
   mkDerivation =
     { elmSrcs ? ./elm-srcs.nix
     , srcs
-    , srcdir ? "./src"
-    , extension ? ".elm"
+    , srcdir ? "${srcdir}"
     , name
     , targets ? []
     , versionsDat ? ./versions.dat
     }:
-    stdenv.mkDerivation {
+    let sanitizePath = str: lib.concatStringsSep "/"
+        (map (p: if p == "." then srcdir else p)
+          (builtins.filter (p: p != "..")
+            (lib.splitString "/" str)));
+    in stdenv.mkDerivation {
       inherit name srcs;
       sourceRoot = ".";
 
@@ -26,44 +27,38 @@ let
       };
 
       patchPhase = let
-        # TODO: review naming
-        elmJson = pkgs.lib.importJSON ./elm.json;
-        elmJsonFile = pkgs.writeText "elm.json" (builtins.toJSON generatedElmJson);
-        # TODO: hacky.. there might be a better way
-        genSrcs = xs: map (path: if path == "." then srcdir else builtins.replaceStrings ["../" ".." "./" "."] ["" "" "" ""] path) xs;
-        generatedElmJson = with pkgs.lib;
-          if hasAttrByPath ["source-directories"] elmJson then
-            # TODO: check if there isn't better function
-            attrsets.mapAttrs
-              (name: value: if name == "source-directories" then genSrcs value else value)
-              elmJson
-          else
-            elmJson;
+        elmJsonFile = with lib;
+          let elmjson = importJSON ./elm.json;
+          in writeText "elm.json" (builtins.toJSON
+            (if hasAttrByPath ["source-directories"] elmjson then
+              # TODO: check if there isn't better function
+              attrsets.mapAttrs (name: value: if name == "source-directories" then map sanitizePath value else value) elmjson
+            else
+              elmjson
+          ));
       in ''
         cp \${elmJsonFile} ./elm.json
         echo "Generating new elm.json..."
         cat elm.json
       '';
 
-      installPhase = let
-        elmfile = module: "\${srcdir}/\${builtins.replaceStrings ["."] ["/"] module}\${extension}";
-      in ''
-        mkdir -p \$out/share/doc
+      installPhase = ''
+        mkdir -p $out/share/doc
 
-        \${lib.concatStrings (map (module: ''
-          echo "compiling \${elmfile module}"
-          elm make \${elmfile module} --output \$out/\${module}.html --docs \$out/share/doc/\${module}.json
+        \${lib.concatStrings (map (module:
+          let fullmodule = sanitizePath module;
+          in ''
+          echo "compiling \${module}"
+          elm make \${fullmodule}.elm --output $out/\${fullmodule}.html --docs $out/share/doc/\${fullmodule}.json
         '') targets)}
       '';
     };
 in mkDerivation {
   name = "${name}";
-  elmSrcs = ./elm-srcs.nix;
   # TODO: given we need to process elm.json via nix anyway
   # it might be better to just read this from elm.json?
   #   - check if we're possible to get to elm.json
   #   - consult with maitainer
   srcs = ${srcs};
-  targets = ["Main"];
-  srcdir = "${srcdir}";
+  targets = ["./src/Main"];
 }
