@@ -12,8 +12,8 @@ let
     , versionsDat ? ./versions.dat
     }:
     let sanitizePath = str:
-        let path = (builtins.filter (p: p != "..") (lib.splitString "/" str));
-        in lib.concatStringsSep "/" (map (p: if p == "." then srcdir else p)) path;
+        let path = builtins.filter (p: p != "..") (lib.splitString "/" str);
+        in lib.concatStringsSep "/" (map (p: if p == "." then srcdir else p) path);
     in stdenv.mkDerivation {
       inherit name srcs;
       sourceRoot = ".";
