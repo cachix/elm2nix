@@ -4,15 +4,16 @@
 with (import nixpkgs config);
 let
   mkDerivation =
-    { elmSrcs ? ./elm-srcs.nix
+    { elmsrcs ? ./elm-srcs.nix
     , srcs
-    , srcdir ? "${srcdir}"
+    , srcdir ? "src"
     , name
     , targets ? []
     , versionsDat ? ./versions.dat
     }:
-    let sanitizePath = str: lib.concatStringsSep "/"
-        (map (p: if p == "." then srcdir else p) (builtins.filter (p: p != "..") (lib.splitString "/" str)));
+    let sanitizePath = str:
+        let path = (builtins.filter (p: p != "..") (lib.splitString "/" str));
+        in lib.concatStringsSep "/" (map (p: if p == "." then srcdir else p)) path;
     in stdenv.mkDerivation {
       inherit name srcs;
       sourceRoot = ".";
@@ -20,7 +21,7 @@ let
       buildInputs = [ elmPackages.elm ];
 
       buildPhase = pkgs.elmPackages.fetchElmDeps {
-        elmPackages = import elmSrcs;
+        elmPackages = import elmsrcs;
         inherit versionsDat;
       };
 
@@ -48,5 +49,6 @@ let
 in mkDerivation {
   name = "${name}";
   srcs = ${srcs};
+  srcdir = "${srcdir}";
   targets = ["./Main"];
 }
