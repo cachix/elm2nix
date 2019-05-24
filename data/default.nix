@@ -20,11 +20,6 @@ let
 
       buildInputs = [ elmPackages.elm ];
 
-      buildPhase = pkgs.elmPackages.fetchElmDeps {
-        elmPackages = import elmsrcs;
-        inherit versionsDat;
-      };
-
       patchPhase = let
         elmjson = let json = (lib.importJSON ./elm.json) // { source-directories = map sanitizePath srcs; };
         in writeText "elm.json" (builtins.toJSON json);
@@ -33,6 +28,11 @@ let
         cp \${elmjson} ./elm.json
         cat elm.json
       '';
+
+      buildPhase = pkgs.elmPackages.fetchElmDeps {
+        elmPackages = import elmsrcs;
+        inherit versionsDat;
+      };
 
       installPhase = ''
         mkdir -p $out/share/doc
