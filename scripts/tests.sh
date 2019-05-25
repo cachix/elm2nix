@@ -27,3 +27,11 @@ pushd $MYTMPDIR/elm-todomvc
   nix-build
   checkfile ./result/Main.html
 popd
+
+pushd test/source-directories/a-src
+  elm2nix init > default.nix
+  elm2nix convert > elm-srcs.nix
+  elm2nix snapshot > versions.dat
+  nix-build
+  checkfile ./result/Main.html
+popd
