@@ -70,7 +70,6 @@ parseElmJsonDeps obj =
     parseDeps (Object hm) = mapM (uncurry parseDep) (HM.toList hm)
     parseDeps v           = Left (UnexpectedValue v)
 
--- TODO: there is likely to be even better abstraction
 tryLookup :: HashMap Text Value -> Text -> Either Elm2NixError Value
 tryLookup hm key = maybeToRight (KeyNotFound key) (HM.lookup key hm)
   where
@@ -83,27 +82,23 @@ parseElmJsonSrcs obj =
   case obj of
     Object hm -> do
       case tryLookup hm "source-directories" of
-        -- the `source-directories` part of elm.json is optional
-        -- if user don't specified this value `src` directory is the default
-        Left _ -> Right $ pure "./src"
-        Right srcs ->
-          case srcs of
-            Array vec -> mapM extractSrcPath vec
-            v -> Left $ UnexpectedValue v
+          Left _            -> Right Vector.empty
+          Right (Array vec) -> mapM extractSrcPath vec
+          Right v           -> Left (UnexpectedValue v)
     v -> Left $ UnexpectedValue v
   where
     extractSrcPath :: Value -> Either Elm2NixError String
     extractSrcPath val =
       case val of
-        String text -> Right (toNixPath (Text.unpack text))
-        v -> Left $ UnexpectedValue v
+          String text -> Right (toNixPath (Text.unpack text))
+          v -> Left (UnexpectedValue v)
 
     toNixPath :: FilePath -> FilePath
     toNixPath path =
       case path of
-        "."       -> "./."
-        p@('.':_) -> p
-        p         -> "./" <> p
+          "."       -> "./."
+          p@('.':_) -> p
+          p         -> "./" <> p
 
 -- CMDs
 
@@ -136,30 +131,29 @@ initialize = runCLI $ do
     -- | Converts Package.Name to Nix friendly name
     baseName :: Text
     baseName = "elm-app"
+
     version :: Text
     version = "0.1.0"
+
     toNixName :: Text -> Text
     toNixName = Text.replace "/" "-"
+
     name :: String
     name = Text.unpack (toNixName baseName <> "-" <> version)
+
     getSrcDir :: Vector FilePath -> IO FilePath
-    getSrcDir dirs =
-      case Vector.toList dirs of
-        []       -> pure "./src" -- in theory redundant
-        [ dir ]  -> pure dir
-        xs@(h:t) ->
-          if "./." `elem` xs then do
-            -- Nix creates dir named after current directory
-            -- if `srcs` contains `./.`
-            path <- liftIO System.Directory.getCurrentDirectory
-            pure (lastDir path)
-          else
-            -- We can't really tell which one to choose
-            -- so we guess it's the first one
-            pure h
+    getSrcDir dirs
+      | Vector.null dirs = pure "./src"
+      | "./." `Vector.elem` dirs || "."  `Vector.elem` dirs =
+          -- Nix creates dir named after current directory if `srcs` contains `./.`
+        lastDir <$> liftIO System.Directory.getCurrentDirectory
+      | otherwise =
+          -- Can't fail as there is case for Vec.null!
+          pure (Vector.head dirs)
+
     lastDir :: FilePath -> FilePath
     lastDir = foldl (\path c -> if c == '/' then "" else path <> [c]) ""
-    -- TODO: Improve
+
     stringifySrcs :: Vector FilePath -> String
     stringifySrcs xs =
       "[\n"
