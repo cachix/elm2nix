@@ -24,6 +24,8 @@ import qualified Data.HashMap.Strict as HM
 import qualified Data.ByteString.Lazy as LBS
 import qualified Data.Aeson as Json
 import qualified Data.Text as Text
+import qualified Data.Vector as Vector
+import qualified Data.Either as Either
 
 import Elm2Nix.FixedOutput (FixedDerivation(..), prefetch)
 import Elm2Nix.PackagesSnapshot (snapshot)
@@ -51,16 +53,21 @@ parseElmJsonDeps obj =
   case obj of
     Object hm -> do
       deps <- tryLookup hm "dependencies"
-      case deps of
-        Object dhm -> do
-          direct   <- tryLookup dhm "direct"
-          indirect <- tryLookup dhm "indirect"
-          liftM2 (++) (parseDeps direct) (parseDeps indirect)
-        v -> Left (UnexpectedValue v)
+
+      let libstyleDeps = parseDeps deps
+      if Either.isRight libstyleDeps then
+        libstyleDeps
+      else
+        case deps of
+          Object dhm -> do
+            direct   <- tryLookup dhm "direct"
+            indirect <- tryLookup dhm "indirect"
+            liftM2 (++) (parseDeps direct) (parseDeps indirect)
+          v -> Left (UnexpectedValue v)
     v -> Left (UnexpectedValue v)
   where
     parseDep :: Text -> Value -> Either Elm2NixError Dep
-    parseDep name (String ver) = Right (Text.unpack name, Text.unpack ver)
+    parseDep name (String ver) = Right (Text.unpack name, sanitizeVersion (Text.unpack ver))
     parseDep _ v               = Left (UnexpectedValue v)
 
     parseDeps :: Value -> Either Elm2NixError [Dep]
@@ -70,6 +77,10 @@ parseElmJsonDeps obj =
     maybeToRight :: b -> Maybe a -> Either b a
     maybeToRight _ (Just x) = Right x
     maybeToRight y Nothing  = Left y
+
+    sanitizeVersion :: String -> String
+    sanitizeVersion =
+       takeWhile (\c -> c /= ' ') -- converts "1.0.0 <= v < 2.0.0" to "1.0.0"
 
     tryLookup :: HashMap Text Value -> Text -> Either Elm2NixError Value
     tryLookup hm key =

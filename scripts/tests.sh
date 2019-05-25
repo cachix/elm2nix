@@ -34,5 +34,5 @@ pushd test/lib
   elm2nix convert > elm-srcs.nix
   elm2nix snapshot > versions.dat
   nix-build
-  checkfile ./result/Main.html
+  checkfile ./result/share/doc/Main.json
 popd
