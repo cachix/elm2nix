@@ -24,7 +24,6 @@ import qualified Data.HashMap.Strict as HM
 import qualified Data.ByteString.Lazy as LBS
 import qualified Data.Aeson as Json
 import qualified Data.Text as Text
-import qualified Data.Vector as Vector
 import qualified Data.Either as Either
 
 import Elm2Nix.FixedOutput (FixedDerivation(..), prefetch)
