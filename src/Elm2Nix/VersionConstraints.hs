@@ -1,6 +1,6 @@
 {- Parses packages version
 
-  This code is aproximation of but using builtin primitives
+  This code is aproximation of
   - https://github.com/elm/compiler/blob/master/compiler/src/Elm/Version.hs
   - https://github.com/elm/compiler/blob/master/compiler/src/Elm/Constraint.hs
 -}
