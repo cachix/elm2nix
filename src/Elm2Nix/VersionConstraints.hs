@@ -27,9 +27,10 @@ data Version =
     }
     deriving (Eq, Ord)
 
+
 versionFromString :: String -> (String -> Error) -> Either Error Version
 versionFromString string toError =
-  case Split.splitOn " " string of
+  case Split.splitOn "." string of
     [major, minor, patch] ->
       Right (Version major minor patch)
 
