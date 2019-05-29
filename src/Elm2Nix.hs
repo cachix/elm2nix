@@ -73,9 +73,9 @@ parseElmJsonDeps obj =
       in
       case libVer of
        Right ver -> Right (Text.unpack name, V.versionToString ver)
-       Left _ ->
+       Left _    ->
          case V.versionFromString (Text.unpack ver) of
-           Just v -> Right (Text.unpack name, V.versionToString v)
+           Just v   -> Right (Text.unpack name, V.versionToString v)
            Nothing  -> Left (ElmJsonReadError ("Error reading version constraint for '" <> Text.unpack name <> "' package."))
     parseDep _ v = Left (UnexpectedValue v)
 
