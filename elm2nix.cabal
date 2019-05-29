@@ -45,10 +45,13 @@ library
     , text
     , transformers
     , unordered-containers
+    , utf8-string
+    , split
   exposed-modules:
       Elm2Nix
       Elm2Nix.FixedOutput
       Elm2Nix.PackagesSnapshot
+      Elm2Nix.VersionConstraints
   other-modules:
       Paths_elm2nix
   autogen-modules:

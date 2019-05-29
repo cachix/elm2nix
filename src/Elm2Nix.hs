@@ -28,6 +28,7 @@ import qualified Data.Either as Either
 
 import Elm2Nix.FixedOutput (FixedDerivation(..), prefetch)
 import Elm2Nix.PackagesSnapshot (snapshot)
+import qualified Elm2Nix.VersionConstraints as V
 
 
 newtype Elm2Nix a = Elm2Nix { runElm2Nix_ :: ExceptT Elm2NixError IO a }
@@ -66,7 +67,10 @@ parseElmJsonDeps obj =
     v -> Left (UnexpectedValue v)
   where
     parseDep :: Text -> Value -> Either Elm2NixError Dep
-    parseDep name (String ver) = Right (Text.unpack name, sanitizeVersion (Text.unpack ver))
+    parseDep name (String ver) =
+      case V.versionToString <$> V.lowest <$> V.fromString (Text.unpack ver) of
+        Right s -> Right (Text.unpack name, s) -- library constraint
+        Left _  -> Right (Text.unpack name, Text.unpack ver) -- application constraint
     parseDep _ v               = Left (UnexpectedValue v)
 
     parseDeps :: Value -> Either Elm2NixError [Dep]
