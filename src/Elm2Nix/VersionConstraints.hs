@@ -9,6 +9,7 @@ module Elm2Nix.VersionConstraints
   ( Version
   , Constraint
   , fromString
+  , versionFromString
   , lowest
   , versionToString
   ) where
@@ -28,14 +29,19 @@ data Version =
     deriving (Eq, Ord)
 
 
-versionFromString :: String -> (String -> Error) -> Either Error Version
-versionFromString string toError =
+versionFromString' :: String -> (String -> Error) -> Either Error Version
+versionFromString' string toError =
   case Split.splitOn "." string of
     [major, minor, patch] ->
       Right (Version major minor patch)
 
     _ ->
       Left (toError string)
+
+
+versionFromString :: String -> Maybe Version
+versionFromString string =
+  either (const Nothing) Just (versionFromString' string (const BadFormat))
 
 
 versionToString :: Version -> String
@@ -69,10 +75,10 @@ fromString :: String -> Either Error Constraint
 fromString string =
   case Split.splitOn " " string of
     [lower, lowerOp, "v", upperOp, upper] ->
-      do  lo <- versionFromString lower BadLower
+      do  lo <- versionFromString' lower BadLower
           lop <- opFromString lowerOp
           hop <- opFromString upperOp
-          hi <- versionFromString upper BadUpper
+          hi <- versionFromString' upper BadUpper
           if lo < hi
             then Right (Range lo lop hop hi)
             else Left (InvalidRange lo hi)

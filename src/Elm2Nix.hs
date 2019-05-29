@@ -68,10 +68,16 @@ parseElmJsonDeps obj =
   where
     parseDep :: Text -> Value -> Either Elm2NixError Dep
     parseDep name (String ver) =
-      case V.versionToString <$> V.lowest <$> V.fromString (Text.unpack ver) of
-        Right s -> Right (Text.unpack name, s) -- library constraint
-        Left _  -> Right (Text.unpack name, Text.unpack ver) -- application constraint
-    parseDep _ v               = Left (UnexpectedValue v)
+      let
+        libVer = V.lowest <$> V.fromString (Text.unpack ver)
+      in
+      case libVer of
+       Right ver -> Right (Text.unpack name, V.versionToString ver)
+       Left _ ->
+         case V.versionFromString (Text.unpack ver) of
+           Just v -> Right (Text.unpack name, V.versionToString v)
+           Nothing  -> Left (ElmJsonReadError ("Error reading version constraint for '" <> Text.unpack name <> "' package."))
+    parseDep _ v = Left (UnexpectedValue v)
 
     parseDeps :: Value -> Either Elm2NixError [Dep]
     parseDeps (Object hm) = mapM (uncurry parseDep) (HM.toList hm)
