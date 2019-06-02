@@ -87,10 +87,6 @@ parseElmJsonDeps obj =
     maybeToRight _ (Just x) = Right x
     maybeToRight y Nothing  = Left y
 
-    sanitizeVersion :: String -> String
-    sanitizeVersion =
-       takeWhile (\c -> c /= ' ') -- converts "1.0.0 <= v < 2.0.0" to "1.0.0"
-
     tryLookup :: HashMap Text Value -> Text -> Either Elm2NixError Value
     tryLookup hm key =
       maybeToRight (KeyNotFound key) (HM.lookup key hm)
