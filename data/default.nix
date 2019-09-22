@@ -12,6 +12,7 @@ let
     , srcdir ? "./src"
     , targets ? []
     , versionsDat ? ./versions.dat
+    , outputJavaScript ? false
     }:
     stdenv.mkDerivation {
       inherit name src;
@@ -25,11 +26,12 @@ let
 
       installPhase = let
         elmfile = module: "\${srcdir}/\${builtins.replaceStrings ["."] ["/"] module}.elm";
+        extension = if outputJavaScript then "js" else "html";
       in ''
         mkdir -p \$out/share/doc
         \${lib.concatStrings (map (module: ''
           echo "compiling \${elmfile module}"
-          elm make \${elmfile module} --output \$out/\${module}.html --docs \$out/share/doc/\${module}.json
+          elm make \${elmfile module} --output \$out/\${module}.\${extension} --docs \$out/share/doc/\${module}.json
         '') targets)}
       '';
     };
@@ -39,4 +41,5 @@ in mkDerivation {
   src = ./.;
   targets = ["Main"];
   srcdir = "${srcdir}";
+  outputJavaScript = false;
 }
