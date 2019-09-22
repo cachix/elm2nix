@@ -49,11 +49,11 @@ runElm2Nix = runExceptT . runElm2Nix_
 throwErr :: Elm2NixError -> Elm2Nix a
 throwErr e = Elm2Nix (throwE e)
 
-parseElmJsonDeps :: Value -> Either Elm2NixError [Dep]
-parseElmJsonDeps obj =
+parseElmJsonDeps :: Text -> Value -> Either Elm2NixError [Dep]
+parseElmJsonDeps depsKey obj =
   case obj of
     Object hm -> do
-      deps <- tryLookup hm "dependencies"
+      deps <- tryLookup hm depsKey
       case deps of
         Object dhm -> do
           direct   <- tryLookup dhm "direct"
@@ -108,10 +108,11 @@ convert = runCLI $ do
   res <- liftIO (fmap Json.eitherDecode (LBS.readFile "elm.json"))
   elmJson <- either (throwErr . ElmJsonReadError) return res
 
-  deps <- either throwErr return (parseElmJsonDeps elmJson)
+  deps <- either throwErr return (parseElmJsonDeps "dependencies" elmJson)
+  testDeps <- either throwErr return (parseElmJsonDeps "test-dependencies" elmJson)
   liftIO (hPutStrLn stderr "Prefetching tarballs and computing sha256 hashes ...")
 
-  sources <- liftIO (mapConcurrently (uncurry prefetch) deps)
+  sources <- liftIO (mapConcurrently (uncurry prefetch) (deps ++ testDeps))
   liftIO (putStrLn (generateNixSources sources))
 
 initialize :: IO ()
