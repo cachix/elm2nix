@@ -10,6 +10,7 @@ let
     , name
     , targets ? []
     , versionsDat ? ./versions.dat
+    , outputJavaScript ? false
     }:
     let sanitizePath = str:
         let path = builtins.filter (p: p != "..") (lib.splitString "/" str);
@@ -18,7 +19,8 @@ let
       inherit name srcs;
       sourceRoot = ".";
 
-      buildInputs = [ elmPackages.elm ];
+      buildInputs = [ elmPackages.elm ]
+        ++ lib.optional outputJavaScript nodePackages_10_x.uglify-js;
 
       patchPhase = let
         elmjson = let json = (lib.importJSON ./elm.json) // { source-directories = map sanitizePath srcs; };
@@ -34,16 +36,22 @@ let
         inherit versionsDat;
       };
 
-      installPhase = ''
-        mkdir -p $out/share/doc
-
+      installPhase =
+        let extension = if outputJavaScript then "js" else "html";
+      in ''
+        mkdir -p \$out/share/doc
         \${lib.concatStrings (map (module:
           let fullmodule = sanitizePath module;
               modulename = sanitizePath (lib.removePrefix "./" module);
           in ''
-            echo "compiling \${module}"
-            elm make \${fullmodule}.elm --output $out/\${modulename}.html --docs $out/share/doc/\${modulename}.json
-          '') targets)}
+          echo "compiling \${modulename}"
+          elm make \${fullmodule}.elm --output \$out/\${modulename}.\${extension} --docs \$out/share/doc/\${modulename}.json
+          \${lib.optionalString outputJavaScript ''
+            echo "minifying \${modulename}"
+            uglifyjs $out/\${modulename}.\${extension} --compress 'pure_funcs="F2,F3,F4,F5,F6,F7,F8,F9,A2,A3,A4,A5,A6,A7,A8,A9",pure_getters,keep_fargs=false,unsafe_comps,unsafe' \\
+                | uglifyjs --mangle --output=$out/\${modulename}.min.\${extension}
+          ''}
+        '') targets)}
       '';
     };
 in mkDerivation {
@@ -56,4 +64,5 @@ in mkDerivation {
   # Should be relative path as a string to modules you want to compile
   # excluding `.elm` extension
   targets = ["./Main"];
+  outputJavaScript = false;
 }
