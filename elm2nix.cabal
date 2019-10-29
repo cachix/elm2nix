@@ -17,7 +17,7 @@ build-type:     Simple
 cabal-version:  2.0
 
 extra-source-files:
-    ChangeLog.md
+    CHANGELOG.md
     README.md
     data/default.nix
 
