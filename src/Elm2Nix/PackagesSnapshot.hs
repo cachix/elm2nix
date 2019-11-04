@@ -9,6 +9,7 @@
 -}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE BangPatterns #-}
 module Elm2Nix.PackagesSnapshot
   ( snapshot
   ) where
@@ -17,6 +18,8 @@ import Control.Monad (liftM2, liftM3)
 import qualified Data.Aeson as Aeson
 import qualified Data.Binary as Binary
 import Data.Binary (Binary, put, get, putWord8, getWord8)
+import Data.Binary.Put (putBuilder)
+import Data.Binary.Get.Internal (readN)
 import qualified Data.Map as Map
 #if MIN_VERSION_req(2,0,0)
 #else
@@ -25,9 +28,13 @@ import Data.Default (def)
 import Data.Map (Map)
 import Data.Text (Text)
 import qualified Data.Text as Text
+import qualified Data.Text.Encoding as Text
 import Data.Word (Word16)
 import qualified Network.HTTP.Req as Req
 import System.FilePath ((</>))
+import qualified Data.List as List
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Builder as BS
 
 
 data Name =
@@ -52,16 +59,38 @@ data Version =
     }
     deriving (Eq, Ord)
 
-data PackageRegistry =
-  PackageRegistry Int (Map Name [Version])
+data KnownVersions =
+  KnownVersions
+    { _newest :: Version
+    , _previous :: ![Version]
+    }
+
+data Registry =
+  Registry
+    { _count :: !Int
+    , _versions :: !(Map Name KnownVersions)
+    }
+
+putUnder256 :: BS.ByteString -> Binary.Put
+putUnder256 bs =
+  do  putWord8 (fromIntegral (BS.length bs))
+      putBuilder (BS.byteString bs)
+
+getUnder256 :: Binary.Get (BS.ByteString)
+getUnder256 =
+  do  word <- getWord8
+      let !n = fromIntegral word
+      readN n id
 
 instance Binary Name where
   get =
-    liftM2 Name get get
+    liftM2 Name
+      (fmap Text.decodeUtf8 getUnder256)
+      (fmap Text.decodeUtf8 getUnder256)
 
   put (Name author project) =
-    do  put author
-        put project
+    do putUnder256 (Text.encodeUtf8 author)
+       putUnder256 (Text.encodeUtf8 project)
 
 instance Binary Package where
   get =
@@ -74,7 +103,7 @@ instance Binary Package where
 instance Binary Version where
   get =
     do  word <- getWord8
-        if word == 0
+        if word == 255
           then liftM3 Version get get get
           else
             do  minor <- fmap fromIntegral getWord8
@@ -87,14 +116,18 @@ instance Binary Version where
           putWord8 (fromIntegral minor)
           putWord8 (fromIntegral patch)
     else
-      do  putWord8 0
+      do  putWord8 255
           put major
           put minor
           put patch
 
-instance Binary PackageRegistry where
-  get = liftM2 PackageRegistry get get
-  put (PackageRegistry a b) = put a >> put b
+instance Binary KnownVersions where
+  get = liftM2 KnownVersions get get
+  put (KnownVersions a b) = put a >> put b
+
+instance Binary Registry where
+  get = liftM2 Registry get get
+  put (Registry a b) = put a >> put b
 
 #if MIN_VERSION_req(2,0,0)
 defHttpConfig = Req.defaultHttpConfig
@@ -114,14 +147,28 @@ snapshot dir = do
   let packages = unwrap $ case Aeson.fromJSON (Req.responseBody r) of
          Aeson.Error s -> error s
          Aeson.Success val -> val
-      size = Map.foldr ((+) . length) 0 packages
-      registry = PackageRegistry size packages
-  Binary.encodeFile (dir </> "versions.dat") registry
+      size = Map.foldr' addEntry 0 packages
+      registry = Registry size packages
 
-newtype Packages = Packages { unwrap :: Map.Map Name [Version] }
+      addEntry :: KnownVersions -> Int -> Int
+      addEntry (KnownVersions _ vs) count =
+        count + 1 + length vs
+
+  Binary.encodeFile (dir </> "registry.dat") registry
+
+newtype Packages = Packages { unwrap :: Map.Map Name KnownVersions }
+
+toKnownVersions ::  Map.Map Name [Version] -> Map.Map Name KnownVersions
+toKnownVersions  =
+  fmap (\versions ->
+          case List.sortBy (flip compare) versions of
+            v:vs -> KnownVersions v vs
+            [] -> undefined
+       )
 
 instance Aeson.FromJSON Packages where
-  parseJSON v = Packages <$> Aeson.parseJSON v
+  parseJSON v = Packages <$> fmap toKnownVersions (Aeson.parseJSON v)
+
 
 instance Aeson.FromJSON Version where
   parseJSON = Aeson.withText "string" $ \x ->

@@ -11,7 +11,7 @@ let
     , name
     , srcdir ? "./src"
     , targets ? []
-    , versionsDat ? ./versions.dat
+    , registryDat ? ./registry.dat
     , outputJavaScript ? false
     }:
     stdenv.mkDerivation {
@@ -22,7 +22,8 @@ let
 
       buildPhase = pkgs.elmPackages.fetchElmDeps {
         elmPackages = import srcs;
-        inherit versionsDat;
+        elmVersion = "0.19.1";
+        inherit registryDat;
       };
 
       installPhase = let
