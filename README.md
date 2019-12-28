@@ -14,7 +14,7 @@ It consists of multiple commands:
 
 ## Assumptions
 
-Supports Elm 0.19.x
+Supports Elm 0.19.1
 
 ## Installation
 
