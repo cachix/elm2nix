@@ -1,5 +1,9 @@
 # Changelog for elm2nix
 
+## 0.2 (2019-12-28)
+
+- #35 Elm 0.19.1 support (@gpampara)
+
 ## 0.1.2 (2019-10-29)
 
 - #33 Minification of JS output (@turboMaCk)
