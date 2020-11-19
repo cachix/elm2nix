@@ -22,7 +22,7 @@ Supports Elm 0.19.1
 
 Make sure you have up to date stable or unstable nixpkgs channel.
 
-    $ nix-env -iA elm2nix
+    $ nix-env -i elm2nix
 
 ### From source
 
