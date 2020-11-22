@@ -1,7 +1,10 @@
-#!/usr/bin/env nix-shell
-#!nix-shell -p git -i bash
+#!/usr/bin/env bash
 
 set -e
+
+NIXPKGS_COMMIT=$(nix eval --raw "(builtins.fromJSON (builtins.readFile ./nixpkgs-src.json)).rev")
+export NIX_PATH=nixpkgs=https://github.com/NixOS/nixpkgs/archive/$NIXPKGS_COMMIT.tar.gz
+
 
 PATH="$(nix-build . --no-out-link)/bin:$PATH"
 
@@ -16,9 +19,6 @@ checkfile() {
     return 1
   fi
 }
-
-NIXPKGS_COMMIT=$(nix eval --raw "(builtins.fromJSON (builtins.readFile ./nixpkgs-src.json)).rev")
-export NIX_PATH=nixpkgs=https://github.com/NixOS/nixpkgs/archive/$NIXPKGS_COMMIT.tar.gz
 
 pushd $MYTMPDIR/elm-todomvc
   elm2nix init > default.nix
