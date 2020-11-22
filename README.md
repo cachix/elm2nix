@@ -1,6 +1,6 @@
 # elm2nix
 
-[![Build Status](https://travis-ci.org/hercules-ci/elm2nix.svg?branch=master)](https://travis-ci.org/hercules-ci/elm2nix)
+![Build Status](https://github.com/cachix/elm2nix/workflows/Test/badge.svg)
 [![Hackage](https://img.shields.io/hackage/v/elm2nix.svg)](https://hackage.haskell.org/package/elm2nix)
 
 Convert an [Elm](http://elm-lang.org/) project into
