@@ -1,5 +1,10 @@
 # Changelog for elm2nix
 
+## 0.2.1 (2020-11-22)
+
+- #40 Fix compatibility with newer versions of uglify.js (@turboMaCk)
+- #39 Switch to unversioned collection `nodePackages` for npm dependencies in default.nix (@ShrykeWindgrace)
+
 ## 0.2 (2019-12-28)
 
 - #35 Elm 0.19.1 support (@gpampara)
