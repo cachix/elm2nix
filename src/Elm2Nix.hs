@@ -87,7 +87,7 @@ convert = runCLI $ do
   testDeps <- either throwErr return (parseElmJsonDeps "test-dependencies" elmJson)
   liftIO (hPutStrLn stderr "Prefetching tarballs and computing sha256 hashes ...")
 
-  sources <- liftIO (mapConcurrently (uncurry prefetch) (deps ++ testDeps))
+  sources <- liftIO (mapConcurrently (uncurry prefetch) (nub $ deps ++ testDeps))
   liftIO (putStrLn (generateNixSources sources))
 
 initialize :: IO ()
