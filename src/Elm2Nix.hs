@@ -13,7 +13,7 @@ import Control.Monad (liftM2)
 import Control.Monad.Except (liftIO, MonadIO)
 import Control.Monad.Trans.Except (ExceptT, runExceptT, throwE)
 import Data.Aeson (Value(..))
-import Data.List (intercalate)
+import Data.List (intercalate, nub)
 import Data.HashMap.Strict (HashMap)
 import Data.String.Here
 import Data.Text (Text)
@@ -87,7 +87,7 @@ convert = runCLI $ do
   testDeps <- either throwErr return (parseElmJsonDeps "test-dependencies" elmJson)
   liftIO (hPutStrLn stderr "Prefetching tarballs and computing sha256 hashes ...")
 
-  sources <- liftIO (mapConcurrently (uncurry prefetch) (deps ++ testDeps))
+  sources <- liftIO (mapConcurrently (uncurry prefetch) (nub $ deps ++ testDeps))
   liftIO (putStrLn (generateNixSources sources))
 
 initialize :: IO ()
