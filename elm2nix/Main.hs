@@ -47,6 +47,7 @@ getOpts = customExecParser p (infoH opts rest)
 
       $ elm2nix init > default.nix
       $ elm2nix convert > elm-srcs.nix
+      $ elm2nix snapshot
       $ nix-build
 
       Note: You have to run elm2nix from top-level directory of an Elm project.
@@ -56,5 +57,5 @@ getOpts = customExecParser p (infoH opts rest)
     opts = subparser
       ( command "init" (infoH (pure Init) (progDesc "Generate default.nix (printed to stdout)"))
      <> command "convert" (infoH (pure Convert) (progDesc "Generate Nix expressions for elm.json using nix-prefetch-url"))
-     <> command "snapshot" (infoH (pure Snapshot) (progDesc "Generate versions.dat"))
+     <> command "snapshot" (infoH (pure Snapshot) (progDesc "Generate registry.dat"))
       )
