@@ -1,6 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE CPP #-}
 
 module Elm2Nix
     ( convert
@@ -20,9 +21,16 @@ import Data.Text (Text)
 import System.Exit (exitFailure)
 import System.IO (hPutStrLn, stderr)
 
+#if MIN_VERSION_aeson(2,0,0)
+import qualified Data.Aeson.Key as AK
+import qualified Data.Aeson.KeyMap as HM
+#else
 import qualified Data.HashMap.Strict as HM
+#endif
+
 import qualified Data.ByteString.Lazy as LBS
 import qualified Data.Aeson as Json
+import qualified Data.Set as Set
 import qualified Data.Text as Text
 
 import Elm2Nix.FixedOutput (FixedDerivation(..), prefetch)
@@ -59,8 +67,13 @@ parseElmJsonDeps depsKey obj =
         v -> Left (UnexpectedValue v)
     v -> Left (UnexpectedValue v)
   where
+#if MIN_VERSION_aeson(2,0,0)
+    parseDep :: Json.Key -> Value -> Either Elm2NixError Dep
+    parseDep name (String ver) = Right (Text.unpack (AK.toText name), Text.unpack ver)
+#else
     parseDep :: Text -> Value -> Either Elm2NixError Dep
     parseDep name (String ver) = Right (Text.unpack name, Text.unpack ver)
+#endif
     parseDep _ v               = Left (UnexpectedValue v)
 
     parseDeps :: Value -> Either Elm2NixError [Dep]
@@ -71,9 +84,15 @@ parseElmJsonDeps depsKey obj =
     maybeToRight _ (Just x) = Right x
     maybeToRight y Nothing  = Left y
 
+#if MIN_VERSION_aeson(2,0,0)
+    tryLookup :: HM.KeyMap Value -> Text -> Either Elm2NixError Value
+    tryLookup hm key =
+      maybeToRight (KeyNotFound key) (HM.lookup (AK.fromText key) hm)
+#else
     tryLookup :: HashMap Text Value -> Text -> Either Elm2NixError Value
     tryLookup hm key =
       maybeToRight (KeyNotFound key) (HM.lookup key hm)
+#endif
 
 -- CMDs
 
@@ -87,7 +106,7 @@ convert = runCLI $ do
   testDeps <- either throwErr return (parseElmJsonDeps "test-dependencies" elmJson)
   liftIO (hPutStrLn stderr "Prefetching tarballs and computing sha256 hashes ...")
 
-  sources <- liftIO (mapConcurrently (uncurry prefetch) (nub $ deps ++ testDeps))
+  sources <- liftIO (mapConcurrently (uncurry prefetch) (Set.toList . Set.fromList $ deps ++ testDeps))
   liftIO (putStrLn (generateNixSources sources))
 
 initialize :: IO ()
