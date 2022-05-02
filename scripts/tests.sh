@@ -2,9 +2,8 @@
 
 set -e
 
-NIXPKGS_COMMIT=$(nix eval --raw "(builtins.fromJSON (builtins.readFile ./nixpkgs-src.json)).rev")
+NIXPKGS_COMMIT=$(nix eval --impure --raw --expr "(builtins.fromJSON (builtins.readFile ./nixpkgs-src.json)).rev")
 export NIX_PATH=nixpkgs=https://github.com/NixOS/nixpkgs/archive/$NIXPKGS_COMMIT.tar.gz
-
 
 PATH="$(nix-build . --no-out-link)/bin:$PATH"
 
