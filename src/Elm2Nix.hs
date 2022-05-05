@@ -30,7 +30,6 @@ import qualified Data.HashMap.Strict as HM
 
 import qualified Data.ByteString.Lazy as LBS
 import qualified Data.Aeson as Json
-import qualified Data.Set as Set
 import qualified Data.Text as Text
 
 import Elm2Nix.FixedOutput (FixedDerivation(..), prefetch)
@@ -106,7 +105,7 @@ convert = runCLI $ do
   testDeps <- either throwErr return (parseElmJsonDeps "test-dependencies" elmJson)
   liftIO (hPutStrLn stderr "Prefetching tarballs and computing sha256 hashes ...")
 
-  sources <- liftIO (mapConcurrently (uncurry prefetch) (Set.toList . Set.fromList $ deps ++ testDeps))
+  sources <- liftIO (mapConcurrently (uncurry prefetch) (nub $ deps ++ testDeps))
   liftIO (putStrLn (generateNixSources sources))
 
 initialize :: IO ()
