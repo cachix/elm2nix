@@ -1,5 +1,10 @@
 # Changelog for elm2nix
 
+## 0.3.0 (2022-09-06)
+
+- Prevent duplicates between src and test dependencies (@gpampara)
+- #48 Aeson 2 support (@gpampara)
+
 ## 0.2.1 (2020-11-22)
 
 - #40 Fix compatibility with newer versions of uglify.js (@turboMaCk)
