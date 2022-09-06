@@ -8,9 +8,9 @@ synopsis:       Turn your Elm project into buildable Nix project
 description:    Please see the README on Github at <https://github.com/domenkozar/elm2nix#readme>
 homepage:       https://github.com/domenkozar/elm2nix#readme
 bug-reports:    https://github.com/domenkozar/elm2nix/issues
-author:         Domen Kožar
+author:         Domen Kozar
 maintainer:     domen@dev.si
-copyright:      2017-2019 Domen Kožar
+copyright:      2017-2022 Domen Kozar
 license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
