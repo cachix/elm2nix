@@ -9,7 +9,7 @@ Convert an [Elm](http://elm-lang.org/) project into
 It consists of multiple commands:
 - `elm2nix convert`: Given `elm.json` in current directory, all dependencies are
   parsed and their sha256sum calculated
-- `elm2nix snapshot`: Downloads snapshot of http://package.elm-lang.org into `versions.dat`
+- `elm2nix snapshot`: Downloads snapshot of https://package.elm-lang.org/all-packages json and converts into binary `registry.dat` used by [elm-compiler](https://github.com/elm/compiler/blob/047d5026fe6547c842db65f7196fed3f0b4743ee/builder/src/Stuff.hs#L147) as a cache
 - `elm2nix init`: Generates `default.nix` that glues everything together
 
 ## Assumptions
@@ -36,7 +36,8 @@ Make sure you have up to date stable or unstable nixpkgs channel.
     $ cd elm-todomvc
     $ elm2nix init > default.nix
     $ elm2nix convert > elm-srcs.nix
-    $ elm2nix snapshot > versions.dat
+    # generates ./registry.dat
+    $ elm2nix snapshot
     $ nix-build
     $ chromium ./result/Main.html
 
@@ -89,7 +90,8 @@ in pkgs.stdenv.mkDerivation {
 
   configurePhase = pkgs.elmPackages.fetchElmDeps {
     elmPackages = import ./elm-srcs.nix;
-    versionsDat = ./versions.dat;
+    elmVersion = "0.19.1";
+    registryDat = ./registry.dat;
   };
 
   installPhase = ''

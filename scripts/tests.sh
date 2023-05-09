@@ -22,7 +22,7 @@ checkfile() {
 pushd $MYTMPDIR/elm-todomvc
   elm2nix init > default.nix
   elm2nix convert > elm-srcs.nix
-  elm2nix snapshot > versions.dat
+  elm2nix snapshot
   nix-build
   checkfile ./result/Main.html
 popd
