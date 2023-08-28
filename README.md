@@ -51,22 +51,24 @@ Make sure you have up to date stable or unstable nixpkgs channel.
 
 As it's considered experimental, it's generated for now. Might change in the future.
 
-### How to use with ParcelJS and Yarn?
+### How do I use elm2nix with [ParcelJS][parceljs] and [Yarn][yarn-v1]?
 
-Instead of running `elm2nix init`, use something like:
+Instead of running `elm2nix init`, create a `default.nix` with the following derivation:
 
 ```nix
 { pkgs ? import <nixpkgs> {}
 }:
 
 let
-  yarnPkg = pkgs.yarn2nix.mkYarnPackage {
+  yarnPkg = pkgs.mkYarnPackage {
     name = "myproject-node-packages";
-    packageJSON = ./package.json;
-    unpackPhase = ":";
-    src = null;
+    src = pkgs.lib.cleanSourceWith {
+      src = ./.;
+      name = "myproject-node-packages.json";
+      filter = name: type: baseNameOf (toString name) == "package.json";
+    };
     yarnLock = ./yarn.lock;
-    publishBinsFor = ["parcel-bundler"];
+    publishBinsFor = ["parcel"];
   };
 in pkgs.stdenv.mkDerivation {
   name = "myproject-frontend";
@@ -96,7 +98,10 @@ in pkgs.stdenv.mkDerivation {
 
   installPhase = ''
     mkdir -p $out
-    parcel build -d $out index.html
+    parcel build --dist-dir $out index.html
   '';
 }
 ```
+
+[parceljs]: https://parceljs.org/
+[yarn-v1]: https://classic.yarnpkg.com/lang/en/
