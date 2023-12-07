@@ -11,7 +11,7 @@ module Elm2Nix
 
 import Control.Concurrent.Async (mapConcurrently)
 import Control.Monad (liftM2)
-import Control.Monad.Except (liftIO, MonadIO)
+import Control.Monad.IO.Class (liftIO, MonadIO)
 import Control.Monad.Trans.Except (ExceptT, runExceptT, throwE)
 import Data.Aeson (Value(..))
 import Data.List (intercalate, nub)
