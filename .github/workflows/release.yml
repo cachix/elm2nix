@@ -11,3 +11,4 @@ jobs:
     - uses: cachix/haskell-release-action@v1
       with:
         branch: master
+        hackage-token: "${{ secrets.HACKAGE_AUTH_TOKEN }}"
