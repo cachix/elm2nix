@@ -1,3 +1,4 @@
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE QuasiQuotes #-}
 module Main
   ( main
@@ -16,7 +17,7 @@ import qualified Text.PrettyPrint.ANSI.Leijen as PP
 data Command
   = Init
   | Convert
-  | Snapshot
+  | Snapshot { fromElmJson :: Bool }
 
 main :: IO ()
 main = do
@@ -26,7 +27,7 @@ main = do
   case cmd of
     Convert -> Elm2Nix.convert
     Init -> Elm2Nix.initialize
-    Snapshot -> Elm2Nix.snapshot
+    Snapshot { fromElmJson } -> Elm2Nix.snapshot fromElmJson
 
 getOpts :: IO Command
 getOpts = customExecParser p (infoH opts rest)
@@ -45,15 +46,18 @@ getOpts = customExecParser p (infoH opts rest)
 
       $ elm2nix init > default.nix
       $ elm2nix convert > elm-srcs.nix
-      $ elm2nix snapshot
+      $ elm2nix snapshot --from-elm-json
       $ nix-build
 
       Note: You have to run elm2nix from top-level directory of an Elm project.
     |]
 
+    snapshotOpts :: Parser Command
+    snapshotOpts = Snapshot <$> switch (long "from-elm-json")
+
     opts :: Parser Command
     opts = subparser
       ( command "init" (infoH (pure Init) (progDesc "Generate default.nix (printed to stdout)"))
      <> command "convert" (infoH (pure Convert) (progDesc "Generate Nix expressions for elm.json using nix-prefetch-url"))
-     <> command "snapshot" (infoH (pure Snapshot) (progDesc "Generate registry.dat"))
+     <> command "snapshot" (infoH snapshotOpts (progDesc "Generate registry.dat"))
       )

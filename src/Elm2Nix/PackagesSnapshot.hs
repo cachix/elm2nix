@@ -36,6 +36,8 @@ import qualified Data.List as List
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Builder as BS
 
+import Elm2Nix.ElmJson (readElmJson, toErrorMessage)
+
 
 data Name =
   Name
@@ -43,6 +45,12 @@ data Name =
     , _project :: !Text
     }
     deriving (Eq, Ord)
+
+parseName :: (MonadFail m) => Text -> m Name
+parseName n =
+  case Text.splitOn "/" n of
+    [author, package] -> pure $ Name author package
+    lst -> fail $ "wrong package name: " <> show lst
 
 data Package =
   Package
@@ -58,6 +66,17 @@ data Version =
     , _patch :: {-# UNPACK #-} !Word16
     }
     deriving (Eq, Ord)
+
+parseVersion :: (MonadFail m) => Text -> m Version
+parseVersion x =
+    case Text.splitOn "." x of
+      [major, minor, patch] ->
+        return $ Version
+                  (read (Text.unpack major))
+                  (read (Text.unpack minor))
+                  (read (Text.unpack patch))
+      _ ->
+        fail "failure parsing version"
 
 data KnownVersions =
   KnownVersions
@@ -135,8 +154,18 @@ defHttpConfig = Req.defaultHttpConfig
 defHttpConfig = def
 #endif
 
-snapshot :: IO ()
-snapshot = do
+getFromElmJson :: IO Packages
+getFromElmJson = do
+  deps <- either (error . toErrorMessage) id <$> readElmJson
+  let
+    parseDep (k, v) = do
+      name <- parseName (Text.pack k)
+      version <- parseVersion (Text.pack v)
+      pure (name, KnownVersions version [])
+  Packages . Map.fromList <$> mapM parseDep deps
+
+getFromPackageServer :: IO Packages
+getFromPackageServer = do
   r <- Req.runReq defHttpConfig $
     Req.req
     Req.POST
@@ -144,10 +173,14 @@ snapshot = do
     Req.NoReqBody
     Req.jsonResponse
     mempty
-  let packages = unwrap $ case Aeson.fromJSON (Req.responseBody r) of
-         Aeson.Error s -> error s
-         Aeson.Success val -> val
-      size = Map.foldr' addEntry 0 packages
+  case Aeson.fromJSON (Req.responseBody r) of
+    Aeson.Error s -> error s
+    Aeson.Success val -> pure val
+
+snapshot :: Bool -> IO ()
+snapshot fromElmJson = do
+  packages <- unwrap <$> if fromElmJson then getFromElmJson else getFromPackageServer
+  let size = Map.foldr' addEntry 0 packages
       registry = Registry size packages
 
       addEntry :: KnownVersions -> Int -> Int
@@ -171,26 +204,12 @@ instance Aeson.FromJSON Packages where
 
 
 instance Aeson.FromJSON Version where
-  parseJSON = Aeson.withText "string" $ \x ->
-    case Text.splitOn "." x of
-      [major, minor, patch] ->
-        return $ Version
-                  (read (Text.unpack major))
-                  (read (Text.unpack minor))
-                  (read (Text.unpack patch))
-      _ ->
-        fail "failure parsing version"
+  parseJSON = Aeson.withText "string" parseVersion
 
 
 instance Aeson.FromJSON Name where
-  parseJSON = Aeson.withText "string" $ \x ->
-    case Text.splitOn "/" x of
-      [author, package] -> return $ Name author package
-      lst -> fail $ "wrong package name: " <> show lst
+  parseJSON = Aeson.withText "string" parseName
 
 
 instance Aeson.FromJSONKey Name where
-  fromJSONKey = Aeson.FromJSONKeyTextParser $ \x ->
-    case Text.splitOn "/" x of
-      [author, package] -> return $ Name author package
-      lst -> fail $ "wrong package name: " <> show lst
+  fromJSONKey = Aeson.FromJSONKeyTextParser parseName
