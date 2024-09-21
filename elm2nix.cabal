@@ -50,6 +50,7 @@ library
       Elm2Nix.FixedOutput
       Elm2Nix.PackagesSnapshot
   other-modules:
+      Elm2Nix.ElmJson
       Paths_elm2nix
   autogen-modules:
       Paths_elm2nix

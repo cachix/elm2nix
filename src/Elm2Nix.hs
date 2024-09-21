@@ -32,6 +32,7 @@ import qualified Data.ByteString.Lazy as LBS
 import qualified Data.Aeson as Json
 import qualified Data.Text as Text
 
+import Elm2Nix.ElmJson (Dep, Elm2NixError(..), parseElmJsonDeps)
 import Elm2Nix.FixedOutput (FixedDerivation(..), prefetch)
 import Elm2Nix.PackagesSnapshot (snapshot)
 
@@ -39,59 +40,11 @@ import Elm2Nix.PackagesSnapshot (snapshot)
 newtype Elm2Nix a = Elm2Nix { runElm2Nix_ :: ExceptT Elm2NixError IO a }
   deriving (Functor, Applicative, Monad, MonadIO)
 
-type Dep = (String, String)
-
-data Elm2NixError =
-    ElmJsonReadError String
-  | UnexpectedValue Value
-  | KeyNotFound Text
-  deriving Show
-
 runElm2Nix :: Elm2Nix a -> IO (Either Elm2NixError a)
 runElm2Nix = runExceptT . runElm2Nix_
 
 throwErr :: Elm2NixError -> Elm2Nix a
 throwErr e = Elm2Nix (throwE e)
-
-parseElmJsonDeps :: Text -> Value -> Either Elm2NixError [Dep]
-parseElmJsonDeps depsKey obj =
-  case obj of
-    Object hm -> do
-      deps <- tryLookup hm depsKey
-      case deps of
-        Object dhm -> do
-          direct   <- tryLookup dhm "direct"
-          indirect <- tryLookup dhm "indirect"
-          liftM2 (++) (parseDeps direct) (parseDeps indirect)
-        v -> Left (UnexpectedValue v)
-    v -> Left (UnexpectedValue v)
-  where
-#if MIN_VERSION_aeson(2,0,0)
-    parseDep :: Json.Key -> Value -> Either Elm2NixError Dep
-    parseDep name (String ver) = Right (Text.unpack (AK.toText name), Text.unpack ver)
-#else
-    parseDep :: Text -> Value -> Either Elm2NixError Dep
-    parseDep name (String ver) = Right (Text.unpack name, Text.unpack ver)
-#endif
-    parseDep _ v               = Left (UnexpectedValue v)
-
-    parseDeps :: Value -> Either Elm2NixError [Dep]
-    parseDeps (Object hm) = mapM (uncurry parseDep) (HM.toList hm)
-    parseDeps v           = Left (UnexpectedValue v)
-
-    maybeToRight :: b -> Maybe a -> Either b a
-    maybeToRight _ (Just x) = Right x
-    maybeToRight y Nothing  = Left y
-
-#if MIN_VERSION_aeson(2,0,0)
-    tryLookup :: HM.KeyMap Value -> Text -> Either Elm2NixError Value
-    tryLookup hm key =
-      maybeToRight (KeyNotFound key) (HM.lookup (AK.fromText key) hm)
-#else
-    tryLookup :: HashMap Text Value -> Text -> Either Elm2NixError Value
-    tryLookup hm key =
-      maybeToRight (KeyNotFound key) (HM.lookup key hm)
-#endif
 
 -- CMDs
 
