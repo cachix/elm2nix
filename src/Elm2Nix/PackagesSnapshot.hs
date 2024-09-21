@@ -135,8 +135,8 @@ defHttpConfig = Req.defaultHttpConfig
 defHttpConfig = def
 #endif
 
-snapshot :: String -> IO ()
-snapshot dir = do
+snapshot :: IO ()
+snapshot = do
   r <- Req.runReq defHttpConfig $
     Req.req
     Req.POST
@@ -154,7 +154,7 @@ snapshot dir = do
       addEntry (KnownVersions _ vs) count =
         count + 1 + length vs
 
-  Binary.encodeFile (dir </> "registry.dat") registry
+  Binary.encodeFile "registry.dat" registry
 
 newtype Packages = Packages { unwrap :: Map.Map Name KnownVersions }
 

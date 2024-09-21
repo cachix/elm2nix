@@ -8,7 +8,6 @@ import Data.Version (showVersion)
 import Data.String.Here (hereLit)
 import Options.Applicative
 import System.IO
-import System.Directory (getCurrentDirectory)
 import qualified Elm2Nix
 import qualified Paths_elm2nix as This
 import qualified Text.PrettyPrint.ANSI.Leijen as PP
@@ -24,11 +23,10 @@ main = do
   hSetBuffering stdout LineBuffering
   hSetBuffering stderr LineBuffering
   cmd <- getOpts
-  cwd <- getCurrentDirectory
   case cmd of
     Convert -> Elm2Nix.convert
     Init -> Elm2Nix.initialize
-    Snapshot -> Elm2Nix.snapshot cwd
+    Snapshot -> Elm2Nix.snapshot
 
 getOpts :: IO Command
 getOpts = customExecParser p (infoH opts rest)
