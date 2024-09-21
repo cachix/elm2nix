@@ -10,26 +10,14 @@ module Elm2Nix
     ) where
 
 import Control.Concurrent.Async (mapConcurrently)
-import Control.Monad (liftM2)
 import Control.Monad.IO.Class (liftIO, MonadIO)
 import Control.Monad.Trans.Except (ExceptT, runExceptT, throwE)
-import Data.Aeson (Value(..))
-import Data.List (intercalate, nub)
-import Data.HashMap.Strict (HashMap)
+import Data.List (intercalate)
 import Data.String.Here
 import Data.Text (Text)
 import System.Exit (exitFailure)
 import System.IO (hPutStrLn, stderr)
 
-#if MIN_VERSION_aeson(2,0,0)
-import qualified Data.Aeson.Key as AK
-import qualified Data.Aeson.KeyMap as HM
-#else
-import qualified Data.HashMap.Strict as HM
-#endif
-
-import qualified Data.ByteString.Lazy as LBS
-import qualified Data.Aeson as Json
 import qualified Data.Text as Text
 
 import Elm2Nix.ElmJson (Dep, Elm2NixError(..), readElmJson, toErrorMessage)

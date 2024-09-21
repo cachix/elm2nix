@@ -31,7 +31,6 @@ import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
 import Data.Word (Word16)
 import qualified Network.HTTP.Req as Req
-import System.FilePath ((</>))
 import qualified Data.List as List
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Builder as BS

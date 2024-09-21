@@ -4,7 +4,6 @@ module Main
   ( main
   ) where
 
-import Data.Semigroup ((<>))
 import Data.Version (showVersion)
 import Data.String.Here (hereLit)
 import Options.Applicative
