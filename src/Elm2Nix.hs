@@ -32,7 +32,7 @@ import qualified Data.ByteString.Lazy as LBS
 import qualified Data.Aeson as Json
 import qualified Data.Text as Text
 
-import Elm2Nix.ElmJson (Dep, Elm2NixError(..), parseElmJsonDeps)
+import Elm2Nix.ElmJson (Dep, Elm2NixError(..), readElmJson, toErrorMessage)
 import Elm2Nix.FixedOutput (FixedDerivation(..), prefetch)
 import Elm2Nix.PackagesSnapshot (snapshot)
 
@@ -51,14 +51,11 @@ throwErr e = Elm2Nix (throwE e)
 convert :: IO ()
 convert = runCLI $ do
   liftIO (hPutStrLn stderr "Resolving elm.json dependencies into Nix ...")
-  res <- liftIO (fmap Json.eitherDecode (LBS.readFile "elm.json"))
-  elmJson <- either (throwErr . ElmJsonReadError) return res
 
-  deps <- either throwErr return (parseElmJsonDeps "dependencies" elmJson)
-  testDeps <- either throwErr return (parseElmJsonDeps "test-dependencies" elmJson)
+  deps <- either throwErr return =<< liftIO readElmJson
   liftIO (hPutStrLn stderr "Prefetching tarballs and computing sha256 hashes ...")
 
-  sources <- liftIO (mapConcurrently (uncurry prefetch) (nub $ deps ++ testDeps))
+  sources <- liftIO (mapConcurrently (uncurry prefetch) deps)
   liftIO (putStrLn (generateNixSources sources))
 
 initialize :: IO ()
@@ -90,12 +87,7 @@ runCLI m = do
           exitFailure
 
 depErrToStderr :: Elm2NixError -> IO ()
-depErrToStderr err =
-  hPutStrLn stderr $
-      case err of
-        UnexpectedValue v -> "Unexpected Value: \n" ++ show v
-        ElmJsonReadError s -> "Error reading json: " ++ s
-        KeyNotFound key -> "Key not found in json: " ++ Text.unpack key
+depErrToStderr = hPutStrLn stderr . toErrorMessage
 
 generateNixSources :: [FixedDerivation] -> String
 generateNixSources dss =

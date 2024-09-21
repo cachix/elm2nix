@@ -1,12 +1,14 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedStrings #-}
 module Elm2Nix.ElmJson
-  ( Dep, Elm2NixError(..)
-  , parseElmJsonDeps
+  ( Dep
+  , Elm2NixError(..), toErrorMessage
+  , readElmJson
   ) where
 
 import Control.Monad (liftM2)
 import Data.Aeson (Value(..))
+import Data.List (nub)
 import Data.Text (Text)
 
 #if MIN_VERSION_aeson(2,0,0)
@@ -16,6 +18,7 @@ import qualified Data.Aeson.KeyMap as HM
 import qualified Data.HashMap.Strict as HM
 #endif
 
+import qualified Data.ByteString.Lazy as LBS
 import qualified Data.Aeson as Json
 import qualified Data.Text as Text
 
@@ -27,6 +30,28 @@ data Elm2NixError =
   | UnexpectedValue Value
   | KeyNotFound Text
   deriving Show
+
+toErrorMessage :: Elm2NixError -> String
+toErrorMessage err =
+  case err of
+    UnexpectedValue v -> "Unexpected Value: \n" ++ show v
+    ElmJsonReadError s -> "Error reading json: " ++ s
+    KeyNotFound key -> "Key not found in json: " ++ Text.unpack key
+
+readElmJson :: IO (Either Elm2NixError [Dep])
+readElmJson = do
+  res <- Json.eitherDecode <$> LBS.readFile "elm.json"
+  pure $
+    either
+      (Left . ElmJsonReadError)
+      parseElmJson
+      res
+
+parseElmJson :: Value -> Either Elm2NixError [Dep]
+parseElmJson obj =
+  nub <$> liftA2 (++)
+    (parseElmJsonDeps "dependencies" obj)
+    (parseElmJsonDeps "test-dependencies" obj)
 
 parseElmJsonDeps :: Text -> Value -> Either Elm2NixError [Dep]
 parseElmJsonDeps depsKey obj =
