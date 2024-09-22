@@ -16,7 +16,7 @@ import qualified Text.PrettyPrint.ANSI.Leijen as PP
 data Command
   = Init
   | Convert
-  | Snapshot { fromElmJson :: Bool }
+  | Snapshot { elmJson :: FilePath, writeTo :: FilePath }
 
 main :: IO ()
 main = do
@@ -26,7 +26,7 @@ main = do
   case cmd of
     Convert -> Elm2Nix.convert
     Init -> Elm2Nix.initialize
-    Snapshot { fromElmJson } -> Elm2Nix.snapshot fromElmJson
+    Snapshot { elmJson, writeTo } -> Elm2Nix.snapshot elmJson writeTo
 
 getOpts :: IO Command
 getOpts = customExecParser p (infoH opts rest)
@@ -45,14 +45,20 @@ getOpts = customExecParser p (infoH opts rest)
 
       $ elm2nix init > default.nix
       $ elm2nix convert > elm-srcs.nix
-      $ elm2nix snapshot --from-elm-json
+      $ elm2nix snapshot
       $ nix-build
 
       Note: You have to run elm2nix from top-level directory of an Elm project.
     |]
 
     snapshotOpts :: Parser Command
-    snapshotOpts = Snapshot <$> switch (long "from-elm-json")
+    snapshotOpts =
+      Snapshot
+        <$> (arg "elm-json" <|> pure "elm.json")
+        <*> (arg "write-to" <|> pure "registry.dat")
+      where
+        arg name = strOption $
+          long name <> metavar "FILENAME" <> completer (bashCompleter "file")
 
     opts :: Parser Command
     opts = subparser

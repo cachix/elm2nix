@@ -38,9 +38,9 @@ toErrorMessage err =
     ElmJsonReadError s -> "Error reading json: " ++ s
     KeyNotFound key -> "Key not found in json: " ++ Text.unpack key
 
-readElmJson :: IO (Either Elm2NixError [Dep])
-readElmJson = do
-  res <- Json.eitherDecode <$> LBS.readFile "elm.json"
+readElmJson :: FilePath -> IO (Either Elm2NixError [Dep])
+readElmJson path = do
+  res <- Json.eitherDecode <$> LBS.readFile path
   pure $
     either
       (Left . ElmJsonReadError)

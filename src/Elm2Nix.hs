@@ -1,7 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE CPP #-}
 
 module Elm2Nix
     ( convert
@@ -20,7 +19,7 @@ import System.IO (hPutStrLn, stderr)
 
 import qualified Data.Text as Text
 
-import Elm2Nix.ElmJson (Dep, Elm2NixError(..), readElmJson, toErrorMessage)
+import Elm2Nix.ElmJson (Elm2NixError(..), readElmJson, toErrorMessage)
 import Elm2Nix.FixedOutput (FixedDerivation(..), prefetch)
 import Elm2Nix.PackagesSnapshot (snapshot)
 
@@ -40,7 +39,7 @@ convert :: IO ()
 convert = runCLI $ do
   liftIO (hPutStrLn stderr "Resolving elm.json dependencies into Nix ...")
 
-  deps <- either throwErr return =<< liftIO readElmJson
+  deps <- either throwErr return =<< liftIO (readElmJson "elm.json")
   liftIO (hPutStrLn stderr "Prefetching tarballs and computing sha256 hashes ...")
 
   sources <- liftIO (mapConcurrently (uncurry prefetch) deps)

@@ -9,7 +9,7 @@ Convert an [Elm](http://elm-lang.org/) project into
 It consists of multiple commands:
 - `elm2nix convert`: Given `elm.json` in current directory, all dependencies are
   parsed and their sha256sum calculated
-- `elm2nix snapshot`: Downloads snapshot of https://package.elm-lang.org/all-packages json and converts into binary `registry.dat` used by [elm-compiler](https://github.com/elm/compiler/blob/047d5026fe6547c842db65f7196fed3f0b4743ee/builder/src/Stuff.hs#L147) as a cache
+- `elm2nix snapshot`: Reads packages from `elm.json` and writes them to binary cache file `registry.dat` used by [elm-compiler](https://github.com/elm/compiler/blob/047d5026fe6547c842db65f7196fed3f0b4743ee/builder/src/Stuff.hs#L147).
 - `elm2nix init`: Generates `default.nix` that glues everything together
 
 ## Assumptions

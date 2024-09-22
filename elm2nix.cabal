@@ -35,13 +35,8 @@ library
     , bytestring
     , binary
     , containers
-    , data-default
-    , directory
-    , filepath
     , here
-    , mtl
     , process
-    , req
     , text
     , transformers
     , unordered-containers
@@ -68,7 +63,6 @@ executable elm2nix
   build-depends:
       base >= 4.7 && < 5
     , elm2nix
-    , directory
     , optparse-applicative
     , here
     , ansi-wl-pprint

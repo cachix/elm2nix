@@ -1,36 +1,26 @@
-{- Downloads binary serialized https://package.elm-lang.org/all-packages
-   as Elm compiler expects it to parse.
+{- Writes a binary serialized package registry for the Elm compiler to consume.
 
   Takes Elm upstream code from:
-  - https://github.com/elm/compiler/blob/master/builder/src/Deps/Cache.hs
-  - https://github.com/elm/compiler/blob/master/builder/src/Deps/Website.hs
+  - https://github.com/elm/compiler/blob/master/builder/src/Deps/Registry.hs
   - https://github.com/elm/compiler/blob/master/compiler/src/Elm/Package.hs
-
 -}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE BangPatterns #-}
 module Elm2Nix.PackagesSnapshot
   ( snapshot
   ) where
 
 import Control.Monad (liftM2, liftM3)
-import qualified Data.Aeson as Aeson
 import qualified Data.Binary as Binary
 import Data.Binary (Binary, put, get, putWord8, getWord8)
 import Data.Binary.Put (putBuilder)
 import Data.Binary.Get.Internal (readN)
 import qualified Data.Map as Map
-#if MIN_VERSION_req(2,0,0)
-#else
-import Data.Default (def)
-#endif
 import Data.Map (Map)
 import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
 import Data.Word (Word16)
-import qualified Network.HTTP.Req as Req
 import qualified Data.List as List
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Builder as BS
@@ -147,38 +137,15 @@ instance Binary Registry where
   get = liftM2 Registry get get
   put (Registry a b) = put a >> put b
 
-#if MIN_VERSION_req(2,0,0)
-defHttpConfig = Req.defaultHttpConfig
-#else
-defHttpConfig = def
-#endif
-
-getFromElmJson :: IO Packages
-getFromElmJson = do
-  deps <- either (error . toErrorMessage) id <$> readElmJson
+snapshot :: FilePath -> FilePath -> IO ()
+snapshot elmJson writeTo = do
+  deps <- either (error . toErrorMessage) id <$> readElmJson elmJson
   let
     parseDep (k, v) = do
       name <- parseName (Text.pack k)
       version <- parseVersion (Text.pack v)
-      pure (name, KnownVersions version [])
-  Packages . Map.fromList <$> mapM parseDep deps
-
-getFromPackageServer :: IO Packages
-getFromPackageServer = do
-  r <- Req.runReq defHttpConfig $
-    Req.req
-    Req.POST
-    (Req.https "package.elm-lang.org" Req./: "all-packages")
-    Req.NoReqBody
-    Req.jsonResponse
-    mempty
-  case Aeson.fromJSON (Req.responseBody r) of
-    Aeson.Error s -> error s
-    Aeson.Success val -> pure val
-
-snapshot :: Bool -> IO ()
-snapshot fromElmJson = do
-  packages <- unwrap <$> if fromElmJson then getFromElmJson else getFromPackageServer
+      pure (name, [version])
+  packages <- toKnownVersions . Map.fromListWith (<>) <$> mapM parseDep deps
   let size = Map.foldr' addEntry 0 packages
       registry = Registry size packages
 
@@ -186,9 +153,7 @@ snapshot fromElmJson = do
       addEntry (KnownVersions _ vs) count =
         count + 1 + length vs
 
-  Binary.encodeFile "registry.dat" registry
-
-newtype Packages = Packages { unwrap :: Map.Map Name KnownVersions }
+  Binary.encodeFile writeTo registry
 
 toKnownVersions ::  Map.Map Name [Version] -> Map.Map Name KnownVersions
 toKnownVersions  =
@@ -197,18 +162,3 @@ toKnownVersions  =
             v:vs -> KnownVersions v vs
             [] -> undefined
        )
-
-instance Aeson.FromJSON Packages where
-  parseJSON v = Packages <$> fmap toKnownVersions (Aeson.parseJSON v)
-
-
-instance Aeson.FromJSON Version where
-  parseJSON = Aeson.withText "string" parseVersion
-
-
-instance Aeson.FromJSON Name where
-  parseJSON = Aeson.withText "string" parseName
-
-
-instance Aeson.FromJSONKey Name where
-  fromJSONKey = Aeson.FromJSONKeyTextParser parseName
