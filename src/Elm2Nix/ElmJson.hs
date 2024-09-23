@@ -49,7 +49,7 @@ readElmJson path = do
 
 parseElmJson :: Value -> Either Elm2NixError [Dep]
 parseElmJson obj =
-  nub <$> liftA2 (++)
+  nub <$> liftM2 (++)
     (parseElmJsonDeps "dependencies" obj)
     (parseElmJsonDeps "test-dependencies" obj)
 
