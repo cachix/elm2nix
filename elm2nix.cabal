@@ -35,13 +35,8 @@ library
     , bytestring
     , binary
     , containers
-    , data-default
-    , directory
-    , filepath
     , here
-    , mtl
     , process
-    , req
     , text
     , transformers
     , unordered-containers
@@ -50,6 +45,7 @@ library
       Elm2Nix.FixedOutput
       Elm2Nix.PackagesSnapshot
   other-modules:
+      Elm2Nix.ElmJson
       Paths_elm2nix
   autogen-modules:
       Paths_elm2nix
@@ -67,7 +63,6 @@ executable elm2nix
   build-depends:
       base >= 4.7 && < 5
     , elm2nix
-    , directory
     , optparse-applicative
     , here
     , ansi-wl-pprint

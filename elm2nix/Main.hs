@@ -1,14 +1,13 @@
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE QuasiQuotes #-}
 module Main
   ( main
   ) where
 
-import Data.Semigroup ((<>))
 import Data.Version (showVersion)
 import Data.String.Here (hereLit)
 import Options.Applicative
 import System.IO
-import System.Directory (getCurrentDirectory)
 import qualified Elm2Nix
 import qualified Paths_elm2nix as This
 import qualified Text.PrettyPrint.ANSI.Leijen as PP
@@ -17,18 +16,17 @@ import qualified Text.PrettyPrint.ANSI.Leijen as PP
 data Command
   = Init
   | Convert
-  | Snapshot
+  | Snapshot { elmJson :: FilePath, writeTo :: FilePath }
 
 main :: IO ()
 main = do
   hSetBuffering stdout LineBuffering
   hSetBuffering stderr LineBuffering
   cmd <- getOpts
-  cwd <- getCurrentDirectory
   case cmd of
     Convert -> Elm2Nix.convert
     Init -> Elm2Nix.initialize
-    Snapshot -> Elm2Nix.snapshot cwd
+    Snapshot { elmJson, writeTo } -> Elm2Nix.snapshot elmJson writeTo
 
 getOpts :: IO Command
 getOpts = customExecParser p (infoH opts rest)
@@ -53,9 +51,18 @@ getOpts = customExecParser p (infoH opts rest)
       Note: You have to run elm2nix from top-level directory of an Elm project.
     |]
 
+    snapshotOpts :: Parser Command
+    snapshotOpts =
+      Snapshot
+        <$> (arg "elm-json" <|> pure "elm.json")
+        <*> (arg "write-to" <|> pure "registry.dat")
+      where
+        arg name = strOption $
+          long name <> metavar "FILENAME" <> completer (bashCompleter "file")
+
     opts :: Parser Command
     opts = subparser
       ( command "init" (infoH (pure Init) (progDesc "Generate default.nix (printed to stdout)"))
      <> command "convert" (infoH (pure Convert) (progDesc "Generate Nix expressions for elm.json using nix-prefetch-url"))
-     <> command "snapshot" (infoH (pure Snapshot) (progDesc "Generate registry.dat"))
+     <> command "snapshot" (infoH snapshotOpts (progDesc "Generate registry.dat"))
       )
