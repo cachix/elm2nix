@@ -88,7 +88,7 @@ parseElmJsonDeps depsKey obj =
     tryLookup hm key =
       maybeToRight (KeyNotFound key) (HM.lookup (AK.fromText key) hm)
 #else
-    tryLookup :: HashMap Text Value -> Text -> Either Elm2NixError Value
+    tryLookup :: HM.HashMap Text Value -> Text -> Either Elm2NixError Value
     tryLookup hm key =
       maybeToRight (KeyNotFound key) (HM.lookup key hm)
 #endif
