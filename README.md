@@ -18,28 +18,13 @@ Supports Elm 0.19.1
 
 ## Installation
 
-### From nixpkgs (recommended)
+It's already included in [devenv](https://devenv.sh/getting-started/) when using Elm:
 
-Make sure you have up to date stable or unstable nixpkgs channel.
-
-    $ nix-env -i elm2nix
-
-### From source
-
-    $ git clone https://github.com/domenkozar/elm2nix.git
-    $ cd elm2nix
-    $ nix-env -if .
-
-## Usage
-
-    $ git clone https://github.com/evancz/elm-todomvc.git
-    $ cd elm-todomvc
-    $ elm2nix init > default.nix
-    $ elm2nix convert > elm-srcs.nix
-    # generates ./registry.dat
-    $ elm2nix snapshot
-    $ nix-build
-    $ chromium ./result/Main.html
+```nix
+{
+  langauges.elm.enable = true;
+}
+```
 
 ## Running tests (as per CI)
 
@@ -55,53 +40,7 @@ As it's considered experimental, it's generated for now. Might change in the fut
 
 Instead of running `elm2nix init`, create a `default.nix` with the following derivation:
 
-```nix
-{ pkgs ? import <nixpkgs> {}
-}:
-
-let
-  yarnPkg = pkgs.mkYarnPackage {
-    name = "myproject-node-packages";
-    src = pkgs.lib.cleanSourceWith {
-      src = ./.;
-      name = "myproject-node-packages.json";
-      filter = name: type: baseNameOf (toString name) == "package.json";
-    };
-    yarnLock = ./yarn.lock;
-    publishBinsFor = ["parcel"];
-  };
-in pkgs.stdenv.mkDerivation {
-  name = "myproject-frontend";
-  src = pkgs.lib.cleanSource ./.;
-
-  buildInputs = with pkgs.elmPackages; [
-    elm
-    elm-format
-    yarnPkg
-    pkgs.yarn
-  ];
-
-  patchPhase = ''
-    rm -rf elm-stuff
-    ln -sf ${yarnPkg}/node_modules .
-  '';
-
-  shellHook = ''
-    ln -fs ${yarnPkg}/node_modules .
-  '';
-
-  configurePhase = pkgs.elmPackages.fetchElmDeps {
-    elmPackages = import ./elm-srcs.nix;
-    elmVersion = "0.19.1";
-    registryDat = ./registry.dat;
-  };
-
-  installPhase = ''
-    mkdir -p $out
-    parcel build --dist-dir $out index.html
-  '';
-}
-```
+https://github.com/cachix/elm2nix/issues/49#issuecomment-1696082884
 
 [parceljs]: https://parceljs.org/
 [yarn-v1]: https://classic.yarnpkg.com/lang/en/
