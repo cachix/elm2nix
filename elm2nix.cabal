@@ -5,9 +5,9 @@
 name:           elm2nix
 version: 0.3.1
 synopsis:       Turn your Elm project into buildable Nix project
-description:    Please see the README on Github at <https://github.com/domenkozar/elm2nix#readme>
-homepage:       https://github.com/domenkozar/elm2nix#readme
-bug-reports:    https://github.com/domenkozar/elm2nix/issues
+description:    Please see the README on Github at <https://github.com/cachix/elm2nix#readme>
+homepage:       https://github.com/cachix/elm2nix#readme
+bug-reports:    https://github.com/cachix/elm2nix/issues
 author:         Domen Kozar
 maintainer:     domen@dev.si
 copyright:      2017-2022 Domen Kozar
@@ -23,7 +23,7 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: https://github.com/domenkozar/elm2nix
+  location: https://github.com/cachix/elm2nix
 
 library
   hs-source-dirs:
