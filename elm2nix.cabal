@@ -1,9 +1,5 @@
--- This file has been generated from package.yaml by hpack version 0.18.1.
---
--- see: https://github.com/sol/hpack
-
 name:           elm2nix
-version: 0.3.1
+version: 0.4.0
 synopsis:       Turn your Elm project into buildable Nix project
 description:    Please see the README on Github at <https://github.com/domenkozar/elm2nix#readme>
 homepage:       https://github.com/domenkozar/elm2nix#readme

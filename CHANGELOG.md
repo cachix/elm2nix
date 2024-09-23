@@ -1,5 +1,9 @@
 # Changelog for elm2nix
 
+## 0.4.0 (2024-09-23)
+
+- snapshot creates a minimal registry.dat from elm.json without network access (@bmillwood)
+
 ## 0.3.0 (2022-09-06)
 
 - Prevent duplicates between src and test dependencies (@gpampara)
