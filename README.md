@@ -28,6 +28,7 @@ It's already included in [devenv](https://devenv.sh/getting-started/) when using
     "frontend:elm2nix" = {
       exec = "cd frontend && elm2nix convert > elm-srcs.nix && elm2nix snapshot";
       execIfModified = [ "frontend/elm.json" ];
+      before = [ "devenv:enterShell" ];
     };
   };
 
