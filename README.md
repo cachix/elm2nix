@@ -23,6 +23,14 @@ It's already included in [devenv](https://devenv.sh/getting-started/) when using
 ```nix
 {
   langauges.elm.enable = true;
+
+  tasks = {
+    "frontend:elm2nix" = {
+      exec = "cd frontend && elm2nix convert > elm-srcs.nix && elm2nix snapshot";
+      execIfModified = [ "frontend/elm.json" ];
+    };
+  };
+
 }
 ```
 
