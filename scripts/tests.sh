@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
-set -e
+set -ex
 
 WORKDIR=$(mktemp -d)
 trap "rm -rf $WORKDIR" EXIT
 
 cabal update
+cabal build
 
-ELM2NIX=$(cabal exec which elm2nix)
+ELM2NIX=$(cabal list-bin elm2nix)
 
 git clone https://github.com/evancz/elm-todomvc.git $WORKDIR/elm-todomvc
 
