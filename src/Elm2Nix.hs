@@ -1,30 +1,28 @@
-{-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE QuasiQuotes #-}
 
 module Elm2Nix
-    ( convert
-    , initialize
-    , snapshot
-    ) where
+  ( convert,
+    initialize,
+    snapshot,
+  )
+where
 
 import Control.Concurrent.Async (mapConcurrently)
-import Control.Monad.IO.Class (liftIO, MonadIO)
+import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Trans.Except (ExceptT, runExceptT, throwE)
 import Data.List (intercalate)
 import Data.String.Here
 import Data.Text (Text)
+import qualified Data.Text as Text
+import Elm2Nix.ElmJson (Elm2NixError (..), readElmJson, toErrorMessage)
+import Elm2Nix.FixedOutput (FixedDerivation (..), prefetch)
+import Elm2Nix.PackagesSnapshot (snapshot)
 import System.Exit (exitFailure)
 import System.IO (hPutStrLn, stderr)
 
-import qualified Data.Text as Text
-
-import Elm2Nix.ElmJson (Elm2NixError(..), readElmJson, toErrorMessage)
-import Elm2Nix.FixedOutput (FixedDerivation(..), prefetch)
-import Elm2Nix.PackagesSnapshot (snapshot)
-
-
-newtype Elm2Nix a = Elm2Nix { runElm2Nix_ :: ExceptT Elm2NixError IO a }
+newtype Elm2Nix a = Elm2Nix {runElm2Nix_ :: ExceptT Elm2NixError IO a}
   deriving (Functor, Applicative, Monad, MonadIO)
 
 runElm2Nix :: Elm2Nix a -> IO (Either Elm2NixError a)
@@ -46,10 +44,11 @@ convert = runCLI $ do
   liftIO (putStrLn (generateNixSources sources))
 
 initialize :: IO ()
-initialize = runCLI $
-  liftIO (putStrLn [template|data/default.nix|])
+initialize =
+  runCLI $
+    liftIO (putStrLn [template|data/default.nix|])
   where
-    -- | Converts Package.Name to Nix friendly name
+    -- \| Converts Package.Name to Nix friendly name
     baseName :: Text
     baseName = "elm-app"
     version :: Text
@@ -67,11 +66,11 @@ runCLI :: Elm2Nix a -> IO a
 runCLI m = do
   result <- runElm2Nix m
   case result of
-        Right a ->
-          return a
-        Left err -> do
-          depErrToStderr err
-          exitFailure
+    Right a ->
+      return a
+    Left err -> do
+      depErrToStderr err
+      exitFailure
 
 depErrToStderr :: Elm2NixError -> IO ()
 depErrToStderr = hPutStrLn stderr . toErrorMessage
