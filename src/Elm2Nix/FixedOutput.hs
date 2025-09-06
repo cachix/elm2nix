@@ -40,14 +40,12 @@ prefetch name version = do
     ExitFailure _ -> error "nix-prefetch-url exited with non-zero"
     ExitSuccess -> do
       buf <- BS.hGetContents stdoutH
-      let ls = BS.lines buf
-      case length ls of
-        0 -> error "unknown nix-prefetch-url output"
-        2 ->
+      case BS.lines buf of
+        [x, xs] ->
           return $
             FixedDerivation
-              (BS.unpack $ head ls)
-              (BS.unpack $ head $ tail ls)
+              (BS.unpack x)
+              (BS.unpack xs)
               url
               name
               version
