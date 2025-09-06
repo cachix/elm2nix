@@ -4,6 +4,8 @@ set -e
 WORKDIR=$(mktemp -d)
 trap "rm -rf $WORKDIR" EXIT
 
+cabal update
+
 ELM2NIX=$(cabal exec which elm2nix)
 
 git clone https://github.com/evancz/elm-todomvc.git $WORKDIR/elm-todomvc
