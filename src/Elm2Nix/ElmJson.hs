@@ -69,13 +69,13 @@ parseElmJsonDeps depsKey obj =
           liftM2 (++) (parseDeps direct) (parseDeps indirect)
         v -> Left (UnexpectedValue v)
     v -> Left (UnexpectedValue v)
-  where
+
 #if MIN_VERSION_aeson(2,0,0)
-    parseDep :: Json.Key -> Value -> Either Elm2NixError Dep
-    parseDep name (String ver) = Right (Text.unpack (AK.toText name), Text.unpack ver)
+parseDep :: Json.Key -> Value -> Either Elm2NixError Dep
+parseDep name (String ver) = Right (Text.unpack (AK.toText name), Text.unpack ver)
 #else
-    parseDep :: Text -> Value -> Either Elm2NixError Dep
-    parseDep name (String ver) = Right (Text.unpack name, Text.unpack ver)
+parseDep :: Text -> Value -> Either Elm2NixError Dep
+parseDep name (String ver) = Right (Text.unpack name, Text.unpack ver)
 #endif
 parseDep _ v = Left (UnexpectedValue v)
 
@@ -88,11 +88,11 @@ maybeToRight _ (Just x) = Right x
 maybeToRight y Nothing = Left y
 
 #if MIN_VERSION_aeson(2,0,0)
-    tryLookup :: HM.KeyMap Value -> Text -> Either Elm2NixError Value
-    tryLookup hm key =
-      maybeToRight (KeyNotFound key) (HM.lookup (AK.fromText key) hm)
+tryLookup :: HM.KeyMap Value -> Text -> Either Elm2NixError Value
+tryLookup hm key =
+  maybeToRight (KeyNotFound key) (HM.lookup (AK.fromText key) hm)
 #else
-    tryLookup :: HM.HashMap Text Value -> Text -> Either Elm2NixError Value
-    tryLookup hm key =
-      maybeToRight (KeyNotFound key) (HM.lookup key hm)
+tryLookup :: HM.HashMap Text Value -> Text -> Either Elm2NixError Value
+tryLookup hm key =
+  maybeToRight (KeyNotFound key) (HM.lookup key hm)
 #endif
