@@ -1,6 +1,6 @@
 # elm2nix
 
-![Build Status](https://github.com/cachix/elm2nix/workflows/Test/badge.svg)
+[![Build status](https://github.com/cachix/elm2nix/actions/workflows/test.yml/badge.svg)](https://github.com/cachix/elm2nix/actions/workflows/test.yml)
 [![Hackage](https://img.shields.io/hackage/v/elm2nix.svg)](https://hackage.haskell.org/package/elm2nix)
 
 Convert an [Elm](http://elm-lang.org/) project into
