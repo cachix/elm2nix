@@ -2,4 +2,8 @@
 
 {
   languages.haskell.enable = true;
+
+  git-hooks.hooks = {
+    ormolu.enable = true;
+  };
 }
