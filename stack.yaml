@@ -1,8 +1,0 @@
-resolver: lts-22.20
-packages:
-- .
-# Use the GHC provided by devenv
-system-ghc: true
-notify-if-nix-on-path: false
-nix:
-  enable: false
