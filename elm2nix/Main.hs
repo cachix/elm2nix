@@ -11,8 +11,8 @@ import Data.Version (showVersion)
 import qualified Elm2Nix
 import Options.Applicative
 import qualified Paths_elm2nix as This
+import qualified Prettyprinter as PP
 import System.IO
-import qualified Text.PrettyPrint.ANSI.Leijen as PP
 
 data Command
   = Init
@@ -37,7 +37,7 @@ getOpts = customExecParser p (infoH opts rest)
       fullDesc
         <> progDesc "Convert Elm project to Nix expressions"
         <> header ("elm2nix " ++ showVersion This.version)
-        <> footerDoc (Just $ PP.string exampleText)
+        <> footerDoc (Just $ PP.pretty exampleText)
     p = prefs showHelpOnEmpty
 
     exampleText :: String

@@ -19,6 +19,8 @@ import qualified Data.Text as Text
 import Elm2Nix.ElmJson (Elm2NixError (..), readElmJson, toErrorMessage)
 import Elm2Nix.FixedOutput (FixedDerivation (..), prefetch)
 import Elm2Nix.PackagesSnapshot (snapshot)
+import Prettyprinter (Doc, Pretty (..), align, braces, defaultLayoutOptions, dquotes, equals, layoutPretty, line, nest, punctuate, semi, vsep)
+import Prettyprinter.Render.String (renderString)
 import System.Exit (exitFailure)
 import System.IO (hPutStrLn, stderr)
 
@@ -76,17 +78,19 @@ depErrToStderr :: Elm2NixError -> IO ()
 depErrToStderr = hPutStrLn stderr . toErrorMessage
 
 generateNixSources :: [FixedDerivation] -> String
-generateNixSources dss =
-  [iTrim|
-{
-${intercalate "\n" (map f dss)}
-}
-  |]
+generateNixSources dss = renderString (layoutPretty defaultLayoutOptions (nixSources dss))
   where
-    f :: FixedDerivation -> String
-    f ds =
-      [i|
-      "${drvName ds}" = {
-        sha256 = "${drvHash ds}";
-        version = "${drvVersion ds}";
-      };|]
+    nixSources :: [FixedDerivation] -> Doc ann
+    nixSources drvs = braces (nest 2 (line <> vsep entries) <> line)
+      where
+        entries = map nixEntry drvs
+
+    nixEntry :: FixedDerivation -> Doc ann
+    nixEntry drv =
+      dquotes (pretty (drvName drv)) <> " = " <> braces (nest 2 (line <> attrs) <> line) <> semi
+      where
+        attrs =
+          vsep
+            [ "sha256 = " <> dquotes (pretty (drvHash drv)) <> semi,
+              "version = " <> dquotes (pretty (drvVersion drv)) <> semi
+            ]
