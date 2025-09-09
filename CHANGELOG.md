@@ -1,5 +1,11 @@
 # Changelog for elm2nix
 
+## Unreleased
+
+## 0.5.0 (2025-09-09)
+
+- Fix inconsistent indentation in generated elm-srcs.nix, now compatible with nixfmt-rfc-style (@sander)
+
 ## 0.4.0 (2024-09-23)
 
 - snapshot creates a minimal registry.dat from elm.json without network access (@bmillwood)
